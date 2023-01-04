@@ -1,0 +1,4 @@
+.vscode
+.pytest_cache
+/testing/__pycache__
+__pycache__
