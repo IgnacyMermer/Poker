@@ -2,7 +2,13 @@ import random
 from main import *
 
 
+
+
 class Card:
+    PLAYER_CARD = 'playerCard'
+    COMMUNITY_CARD = 'communityCard'
+    CARDS_POSITION = [750, 50]
+
     def __init__(self, color, rank):
         self.color = color
         self.rank = rank
@@ -22,7 +28,7 @@ class GameCards:
 
         # write some codes for initialize the deck
         for i in range(0, 4):
-            for j in range(8, 13):
+            for j in range(2, 13):
                 self.gameCards.append(Card(i, j))
 
     def mixCards(self):
@@ -36,6 +42,9 @@ class GameCards:
                 tempCard = self.gameCards.pop()
                 mixedCards.append(tempCard)
         self.gameCards = mixedCards
+    
+    def popCard(self):
+        return self.gameCards.pop()
 
 
 class Result:
@@ -207,6 +216,21 @@ class PokerHandler:
         else:
             additionalScore = sortedCardsList[4].rank * 5 + sortedCardsList[3].rank * 0.3 + sortedCardsList[2].rank * 0.02
             return Result(PokerHandler.HIGH_CARD[0], PokerHandler.HIGH_CARD[1] + additionalScore)
+    
+    @staticmethod
+    def getTwoCardResult(cards):
+        sortedCardsList = []
+        for card in cards:  
+            index = 0
+            for tempCard in sortedCardsList:
+                if card.rank > tempCard.rank:
+                    index += 1
+            sortedCardsList.insert(index, card)
+        if sortedCardsList[0].rank == sortedCardsList[1].rank:
+            additionalScore = sortedCardsList[1].rank * 5
+            return Result(PokerHandler.SINGLE_PAIR[0], PokerHandler.SINGLE_PAIR[1] + additionalScore)
+        else:
+            return Result(PokerHandler.HIGH_CARD[0], PokerHandler.HIGH_CARD[1] + sortedCardsList[1].rank)
 
 
 PokerHandler.getBestCards([Card('serce', 10), Card('serce', 9), Card('serce', 11), Card('serce', 13), Card('serce', 12), Card('dzwonek', 2), Card('zoladz', 5)])
