@@ -505,14 +505,6 @@ class TextSprite(pygame.sprite.Sprite):
         self.rect.centerx = self.position[0]
         self.rect.centery = self.position[1]
 
-        if self.canMove:
-            self.rect.centerx += 100 / seconds
-            if self.rect.centerx >= self.prev_x_pos + 100:
-                self.ChangeMoveTo()
-
-        if self.canMakeBiggerFont:
-            self.DoBiggerEffect(seconds)
-
 
 class CardSprite(pygame.sprite.Sprite):
 
@@ -693,6 +685,10 @@ class PygameView:
         self.button1 = Button('images/btn1przeciwnik.png', 1400, 200, self.window)
         self.button2 = Button('images/btn2przeciwnik.png', 1400, 300, self.window)
         self.button3 = Button('images/btn3przeciwnik.png', 1400, 400, self.window)
+
+        font = pygame.font.SysFont(None, 100)
+        text = ""
+        input_active = True
 
         self.gameStarted = False
         
