@@ -6,6 +6,14 @@ from Components import *
 
 
 class Player:
+    """
+    Class Player stores information about players, their position next to the table, 2 cards which they got,
+    their account balance, how much money they spend in that round, round result, if they are still alive or maybe 
+    they give up in that round and it stores information about risk level of that player, it doesn't matter if the player
+    is user in front of the screen. 
+    """
+
+
     def __init__(self, name, position, level = 1):
         self.name = name
         self.position = position
@@ -16,18 +24,26 @@ class Player:
         self.currentAlive = "Alive"
         self.riskLevel = level
 
-    def addCards(self, aCard):
-        self.cards.append(aCard)
+    def addCards(self, card):
+        """This function add card to player's cards"""
+        self.cards.append(card)
     
     def initCards(self):
         self.cards = []
 
     def choiceBestCards(self, communityCards):
+        """This function void another functions which join user's cards and community's cards and choice the best 5 cards from seven and return result, 
+        which is set to roundResult variable
+        """
+
         tempList = self.cards + communityCards
         result = PokerHandler.getBestCards(tempList)
         self.roundResult = result
 
 class Game:
+    """
+    This class is responsible for managing the entire game. It contains 7 states which tells program, in which moment of the game we are. 
+    """
 
     STATE_START = 'start'
     STATE_PREPARING = 'preparing'
@@ -39,6 +55,12 @@ class Game:
 
 
     def __init__(self, eventManager, playersCount, myName):
+        """
+        gameCards - it stores information about all cards in the cards pot
+        eventManager is to add class' listener to it. It allows to call refresh funtion on every clock tick and check events and game states, 
+        call another function on every moment of the game. In initial state it set game state on STATE_START, it call start function.
+        """
+
         self.gameCards = GameCards()
         self.playersCount = playersCount
         self.myName = myName
@@ -90,6 +112,10 @@ class Game:
 
 
     def dealPreflop(self):
+        """
+        In this moment of game, players get two first cards and then they start auction
+        """
+
         self.state = Game.STATE_PREFLOP
         playerCount = len(self.players)
 
@@ -99,9 +125,13 @@ class Game:
         self.eventManager.addEventToQueue(PreFlopEvent(self.players))
     
     def dealFlop(self):
-        
+
+        """
+        Here is call function (firstMoney) responds for handling first auction in round, then computer shows 3 community cards.
+        """
+
         self.firstMoney()
-        
+
         for player in self.players:
             print(player.name+' '+player.currentAlive)
         self.state = Game.STATE_FLOP
@@ -111,6 +141,12 @@ class Game:
         self.eventManager.addEventToQueue(FlopEvent(self.communityCards, self.players))
     
     def firstMoney(self):
+        """
+        This is void handling first auction, it gets input from user or allows to resign for that round if user writes p in input, 
+        It takes user's price and check for every computer player if it should resign or take the same bid or put more money. 
+        It decide it based on player's cards and risk level of the player.
+        """
+        
         isFirstTime = True
         highestPrice = 0
         while True:
@@ -119,6 +155,7 @@ class Game:
                 player = self.players[0]
                 print('Podaj kwote licytacji (1$ - 50$)')
                 kwota = input()
+                kwota = 15
                 try:
                     price = int(kwota)
                     highestPrice = price
@@ -381,14 +418,14 @@ class Game:
                                     highestPrice = 55
                                 elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 49 <= player.currentMoney:
                                     highestPrice = 49
-                                elif 44 <= player.current_money:
+                                elif 44 <= player.currentMoney:
                                     highestPrice = 44
                             elif player.riskLevel == 2:
                                 if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 58 <= player.currentMoney:
                                     highestPrice = 58
                                 elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 54 <= player.currentMoney:
                                     highestPrice = 54
-                                elif 50 <= player.current_money:
+                                elif 50 <= player.currentMoney:
                                     highestPrice = 50
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
@@ -510,19 +547,17 @@ class CardSprite(pygame.sprite.Sprite):
 
     def __init__(self, card, pos1,  pos2, type, group=None):
         pygame.sprite.Sprite.__init__(self, group)
-        self.src_image = pygame.image.load(self.GetCardImageName(card))
-        self.image = self.src_image
+        self.srcImage = pygame.image.load(self.GetCardImageName(card))
+        self.image = self.srcImage
         self.pos = [0.0, 0.0]
         self.pos[0] = pos1[0] * 1.0  # float
         self.pos[1] = pos1[1] * 1.0  # float
         self.pos2 = pos2
         self.pos1 = pos1
         self.type = type
-        self.rect = self.src_image.get_rect()
+        self.rect = self.srcImage.get_rect()
 
     def update(self, seconds):
-        # updated position over the destination pos
-        # calibrate the final pos not over the dest_pos
         if(self.type == Card.PLAYER_CARD or self.type == Card.COMMUNITY_CARD):
             if self.pos2[0] - self.pos1[0] < 0 \
                 and self.pos2[0] <= self.pos[0]:
@@ -581,8 +616,8 @@ class CardSprite(pygame.sprite.Sprite):
             elif rank == 12:
                 rankStr = 'krol'
 
-            tmp_str = f'images/{rankStr}_{colorStr}.png'
-            return tmp_str
+            tempStr = f'images/{rankStr}_{colorStr}.png'
+            return tempStr
 
 class EventListener:
 
@@ -650,12 +685,13 @@ class KeyboardController:
 class TableSprite(pygame.sprite.Sprite):
     def __init__(self, group=None):
         pygame.sprite.Sprite.__init__(self, group)
-        tableSurf = pygame.Surface((1300, 700))
+        tableSurf = pygame.Surface((1400, 800))
         tableSurf = tableSurf.convert_alpha()
         tableSurf.fill((0, 0, 0, 0))
 
         self.image = tableSurf
         self.rect = (0, 0)
+
 
 
 class PygameView:
@@ -686,33 +722,63 @@ class PygameView:
         self.button2 = Button('images/btn2przeciwnik.png', 1400, 300, self.window)
         self.button3 = Button('images/btn3przeciwnik.png', 1400, 400, self.window)
 
+
+        textSurf2 = font.render("Podaj imie", True, (150, 150, 150))
+        textSurf2 = textSurf2.convert_alpha()
+        
+        self.window.blit(textSurf2, (150, 200))
+        
+
         font = pygame.font.SysFont(None, 100)
-        text = ""
-        input_active = True
+        self.text = ""
+        self.inputActive = True
+        self.inputRect = pygame.Rect(200, 200, 140, 32)
 
         self.gameStarted = False
-        
+
+        self.clock = pygame.time.Clock()
+
+        self.textInput = TextInputBox(50, 50, 400)
+        self.group = pygame.sprite.Group(self.textInput)
+        self.run = True
+
         pygame.display.flip()
 
         self.backSprites = pygame.sprite.RenderUpdates()
         self.playerSprites = pygame.sprite.RenderUpdates()
         self.communitySprites = pygame.sprite.RenderUpdates()
 
-        
+        self.betsSprites = []
+
 
     def refresh(self, event):
         if isinstance(event, ClockEvent):
-            
+
+            if self.run and not self.gameStarted:
+                self.clock.tick(60)
+                eventList = pygame.event.get()
+                self.group.update(eventList)
+                for event in eventList:
+                    if event.type == pygame.QUIT:
+                        self.run = False
+                self.window.fill((35, 85, 35), (0, 0, 500, 200))
+                self.group.draw(self.window)
+                pygame.display.flip()
+
+
             if self.button1.onClick() and not self.gameStarted:
                 self.eventManager.addEventToQueue(GameStartEvent())
                 self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
             if self.button2.onClick() and not self.gameStarted:
                 self.eventManager.addEventToQueue(GameStartEvent())
                 self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
             if self.button3.onClick() and not self.gameStarted:
                 self.eventManager.addEventToQueue(GameStartEvent())
                 self.gameStarted = True
-            
+                self.eventManager.addEventToQueue(NextMoveEvent())
+
             self.backSprites.clear(self.window, self.background)
             self.playerSprites.clear(self.window, self.background)
             self.communitySprites.clear(self.window, self.background)
@@ -732,6 +798,13 @@ class PygameView:
             TableSprite(self.backSprites)
 
         if isinstance(event, PreFlopEvent):
+            firstLicitacja = TextSprite('Podaj kwote licytacji (1$ - 50$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            self.betsSprites.append(firstLicitacja)
+            """self.textInput = TextInputBox(500, 100, 400)
+            self.group = pygame.sprite.Group(self.textInput)
+            self.window.fill((35, 85, 35), (0, 0, 500, 200))
+            self.group.draw(self.window)
+            pygame.display.flip()"""
             self.showPreFlopCards(event.players)
 
         if isinstance(event, FlopEvent):
@@ -745,25 +818,25 @@ class PygameView:
 
         if isinstance(event, ShowDownEvent):
             self.showDownResult(event.player, event.communityCards, event.cardList)
-    
+
     def showPreFlopCards(self, players):
 
         POS_LEFT = 0
         POS_TOP = 0
 
         for player in players:
-            player_pos = player.position
+            playerPos = player.position
 
-            if player_pos == 0:
+            if playerPos == 0:
                 POS_LEFT = 285
                 POS_TOP = 210
-            elif player_pos == 1:
+            elif playerPos == 1:
                 POS_LEFT = 220
                 POS_TOP = 500
-            elif player_pos == 2:
+            elif playerPos == 2:
                 POS_LEFT = 1220
                 POS_TOP = 500
-            elif player_pos == 3:
+            elif playerPos == 3:
                 POS_LEFT = 1150
                 POS_TOP = 210
 
@@ -772,32 +845,30 @@ class PygameView:
             TextSprite(player.name, (POS_LEFT - 20, POS_TOP - 80), 30, (150, 150, 150), self.playerSprites)
 
 
-    def showCommunityCards(self, card_list, players):
+    def showCommunityCards(self, cardList, players):
         self.scoreSprites = []
         for player in players:
-            player_pos = player.position
+            playerPos = player.position
             POS_LEFT = 0
             POS_TOP = 0
 
-            if player_pos == 0:
+            if playerPos == 0:
                 POS_LEFT = 285
                 POS_TOP = 210
-            elif player_pos == 1:
+            elif playerPos == 1:
                 POS_LEFT = 220
                 POS_TOP = 500
-            elif player_pos == 2:
+            elif playerPos == 2:
                 POS_LEFT = 1220
                 POS_TOP = 500
-            elif player_pos == 3:
+            elif playerPos == 3:
                 POS_LEFT = 1150
                 POS_TOP = 210
 
             self.scoreSprites.append(TextSprite(str(player.currentMoney), (POS_LEFT + 30, POS_TOP - 80), 30, (150, 150, 150), self.playerSprites))
 
-        global isWaitingForInput
-
         i = 0
-        for card in card_list:
+        for card in cardList:
             i += 1
             CardSprite(card, Card.CARDS_POSITION, (350 + i * 100, 350), Card.COMMUNITY_CARD, self.communitySprites)
 
@@ -809,20 +880,20 @@ class PygameView:
         self.scoreSprites = []
 
         for player in players:
-            player_pos = player.position
+            playerPos = player.position
             POS_LEFT = 0
             POS_TOP = 0
 
-            if player_pos == 0:
+            if playerPos == 0:
                 POS_LEFT = 285
                 POS_TOP = 210
-            elif player_pos == 1:
+            elif playerPos == 1:
                 POS_LEFT = 220
                 POS_TOP = 500
-            elif player_pos == 2:
+            elif playerPos == 2:
                 POS_LEFT = 1220
                 POS_TOP = 500
-            elif player_pos == 3:
+            elif playerPos == 3:
                 POS_LEFT = 1150
                 POS_TOP = 210
 
@@ -835,26 +906,26 @@ class PygameView:
         self.scoreSprites = []
 
         for player in players:
-            player_pos = player.position
+            playerPos = player.position
             POS_LEFT = 0
             POS_TOP = 0
 
-            if player_pos == 0:
+            if playerPos == 0:
                 POS_LEFT = 285
                 POS_TOP = 210
-            elif player_pos == 1:
+            elif playerPos == 1:
                 POS_LEFT = 220
                 POS_TOP = 500
-            elif player_pos == 2:
+            elif playerPos == 2:
                 POS_LEFT = 1220
                 POS_TOP = 500
-            elif player_pos == 3:
+            elif playerPos == 3:
                 POS_LEFT = 1150
                 POS_TOP = 210
 
             self.scoreSprites.append(TextSprite(str(player.currentMoney), (POS_LEFT + 30, POS_TOP - 80), 30, (150, 150, 150), self.playerSprites))
         CardSprite(card, Card.CARDS_POSITION, (850, 350), Card.COMMUNITY_CARD, self.communitySprites)
-    
+
 
 class Clock:
     def __init__(self, eventManager):
@@ -872,7 +943,6 @@ class Clock:
             self.keepGoing = False
 
 
-
 def main():
     """print('Podaj swoje imie:')
     name = input()
@@ -888,7 +958,7 @@ def main():
 
     keybd = KeyboardController(eventListener)
     clock = Clock(eventListener)
-    
+
     pygameView = PygameView(eventListener)
     texas_holdem = Game(eventListener, 4, 'myName')
     clock.run()
