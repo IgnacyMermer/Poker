@@ -70,7 +70,8 @@ class Game:
 
         self.playerSprites = pygame.sprite.RenderUpdates()
         self.state = Game.STATE_START
-
+        self.moneyText = ""
+        self.isFirstTime = True
 
 
     def refresh(self, event):
@@ -88,6 +89,8 @@ class Game:
                 self.dealRiver()
             elif self.state == Game.STATE_RIVER:
                 self.showDown()
+        if isinstance(event, MoneyTextEvent):
+            self.moneyText = event.text
 
     def start(self):
         self.initializePlayers()
@@ -132,13 +135,23 @@ class Game:
 
         self.firstMoney()
 
-        for player in self.players:
-            print(player.name+' '+player.currentAlive)
-        self.state = Game.STATE_FLOP
-        for i in range(3):
-            self.communityCards.append(self.gameCards.popCard())
-
-        self.eventManager.addEventToQueue(FlopEvent(self.communityCards, self.players))
+        tempBool = True
+        self.eventManager.addEventToQueue(ClearMoneyEvent())
+        for i in range(len(self.players)):
+            if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
+                tempBool = False
+        if tempBool:
+            for player in self.players:
+                print(player.name+' '+player.currentAlive)
+            self.state = Game.STATE_FLOP
+            for i in range(3):
+                self.communityCards.append(self.gameCards.popCard())
+            
+            self.isFirstTime = True
+            self.eventManager.addEventToQueue(FlopEvent(self.communityCards, self.players))
+        else:
+            self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
+                    str(self.highestMoney)))
     
     def firstMoney(self):
         """
@@ -147,30 +160,124 @@ class Game:
         It decide it based on player's cards and risk level of the player.
         """
         
-        isFirstTime = True
-        highestPrice = 0
-        while True:
+        highestPrice = self.highestMoney
+        price = 0
+        if self.isFirstTime:
+            player = self.players[0]
+            #print('Podaj kwote licytacji (1$ - 50$)')
+            kwota = self.moneyText
+            self.moneyText = ""
+            try:
+                price = int(kwota)
+                highestPrice = price
+                player.currentMoney -= price
+                player.moneyOnTable += price
+                if price > 50 or price < 1:
+                    raise ValueError('Niepoprawna wartość kwoty licytacji')
+            except:
+                raise TypeError('Nie została prawidłowo podana kwota licytacji')
+        else:
+            player = self.players[0]
+            if player.moneyOnTable < highestPrice:
+                
+                #print('Najwyzsza stawka na stole: '+str(highestPrice))
+                #print(f'Podaj kwote ktora chcesz polozyc na stol ({highestPrice-player.moneyOnTable}$ - {50-player.moneyOnTable}$) albo wyrownaj(w) albo pas(p)')
+                kwota = self.moneyText
+                if kwota == 'p':
+                    player.currentAlive = 'OOTR'
+                elif kwota == 'w':
+                    player.currentMoney -= highestPrice - player.moneyOnTable
+                    player.moneyOnTable += highestPrice - player.moneyOnTable
+                else:
+                    try:
+                        price = int(kwota)
+                        if price > 50 or price < 1:
+                            raise ValueError('Niepoprawna wartość kwoty licytacji')
+                        if price < highestPrice - player.moneyOnTable:
+                            player.currentAlive = 'OOTR'
+                            price = 0
+                            print('Za mala kwota aby wyrownac lub podbic')
+                        highestPrice = price + player.moneyOnTable
+                        player.currentMoney -= price
+                        player.moneyOnTable += price
+                    except:
+                        raise TypeError('Nie została prawidłowo podana kwota licytacji')
+        self.isFirstTime = False
+        for i in range(1, len(self.players)):
+            player = self.players[i]
+            if player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
+                if highestPrice > 0 and highestPrice < 20:
+                    if PokerHandler.getTwoCardResult(self.players[1].cards).score > 18 and \
+                    self.players[1].riskLevel > 1:
+                            highestPrice = 35
+                    player.currentMoney -= highestPrice - player.moneyOnTable
+                    player.moneyOnTable += highestPrice - player.moneyOnTable
+                elif highestPrice >= 20 and highestPrice <= 40:
+                    if PokerHandler.getTwoCardResult(player.cards).score > 18:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR' 
+                else:
+                    if PokerHandler.getTwoCardResult(player.cards).score > 100:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR'
+        
+        self.highestMoney = highestPrice
+    
+    def dealTurn(self):
+        self.secondMoney()
+
+        self.eventManager.addEventToQueue(ClearMoneyEvent())
+        
+        tempBool = True
+        for i in range(len(self.players)):
+            if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
+                tempBool = False
+        if tempBool:
+            for player in self.players:
+                (player.name+' '+player.currentAlive)
+            self.state = Game.STATE_TURN
+            tempCards = self.gameCards.popCard()
+            self.communityCards.append(tempCards)
+
+            self.isFirstTime = True
+            self.eventManager.addEventToQueue(TurnEvent(tempCards, self.players))
+        else:
+            self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
+                    str(self.highestMoney)))
+
+    def secondMoney(self):
+        highestPrice = self.highestMoney
+        player1Cards = self.players[1].cards + self.communityCards
+        player2Cards = self.players[2].cards + self.communityCards
+        player3Cards = self.players[3].cards + self.communityCards
+        playersCards = [player1Cards, player2Cards, player3Cards]
+        #while True:
+        if self.players[0].currentAlive == 'Alive':
             price = 0
-            if isFirstTime:
+            if self.isFirstTime:
                 player = self.players[0]
-                print('Podaj kwote licytacji (1$ - 50$)')
-                kwota = input()
-                kwota = 15
+                #print(f'Podaj kwote licytacji (1$ - {player.currentMoney})')
+                kwota = self.moneyText
                 try:
                     price = int(kwota)
-                    highestPrice = price
+                    if price > player.currentMoney or price < 1:
+                        raise ValueError('Niepoprawna wartość kwoty licytacji')
+                    highestPrice += price
                     player.currentMoney -= price
                     player.moneyOnTable += price
-                    if price > 50 or price < 1:
-                        raise ValueError('Niepoprawna wartość kwoty licytacji')
+                    
                 except:
                     raise TypeError('Nie została prawidłowo podana kwota licytacji')
             else:
                 player = self.players[0]
                 if player.moneyOnTable < highestPrice:
-                    print('Najwyzsza stawka na stole: '+str(highestPrice))
-                    print(f'Podaj kwote ktora chcesz polozyc na stol ({highestPrice-player.moneyOnTable}$ - {50-player.moneyOnTable}$) albo wyrownaj(w) albo pas(p)')
-                    kwota = input()
+                    #print('Najwyzsza stawka na stole: '+str(highestPrice))
+                    #print(f'Podaj kwote ktora chcesz polozyc na stol ({highestPrice-player.moneyOnTable}$ - {50-player.moneyOnTable}$) albo wyrownaj(w) albo pas(p)')
+                    kwota = self.moneyText
                     if kwota == 'p':
                         player.currentAlive = 'OOTR'
                     elif kwota == 'w':
@@ -179,324 +286,259 @@ class Game:
                     else:
                         try:
                             price = int(kwota)
-                            if price > 50 or price < 1:
+                            if price > player.currentMoney or price < 1:
                                 raise ValueError('Niepoprawna wartość kwoty licytacji')
                             if price < highestPrice - player.moneyOnTable:
                                 player.currentAlive = 'OOTR'
                                 price = 0
                                 print('Za mala kwota aby wyrownac lub podbic')
-                            highestPrice = price + player.moneyOnTable
+                            highestPrice += price
                             player.currentMoney -= price
                             player.moneyOnTable += price
                         except:
                             raise TypeError('Nie została prawidłowo podana kwota licytacji')
-            isFirstTime = False
-            for i in range(1, len(self.players)):
-                player = self.players[i]
-                if player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
-                    if highestPrice > 0 and highestPrice < 20:
-                        if PokerHandler.getTwoCardResult(self.players[1].cards).score > 18 and \
-                        self.players[1].riskLevel > 1:
+        self.isFirstTime = False
+        for i in range(1, len(self.players)):
+            player = self.players[i]
+            if player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
+                if highestPrice < 35 and highestPrice <= player.currentMoney:
+                    print(PokerHandler.getBestCards(playersCards[i-1]).score)
+                    if PokerHandler.getBestCards(playersCards[i-1]).score > 100:
+                        if player.riskLevel == 1:
+                            if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 45 <= player.currentMoney:
+                                highestPrice = 40
+                            elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 38 <= player.currentMoney:
                                 highestPrice = 35
+                            elif 35 <= player.currentMoney:
+                                highestPrice = 35
+                        elif player.riskLevel == 2:
+                            if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 50 <= player.currentMoney:
+                                highestPrice = 50
+                            elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 45 <= player.currentMoney:
+                                highestPrice = 45
+                            elif 40 <= player.currentMoney:
+                                highestPrice = 40
+                    player.currentMoney -= highestPrice - player.moneyOnTable
+                    player.moneyOnTable += highestPrice - player.moneyOnTable
+                elif highestPrice >= 35 and highestPrice <= 45:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score > 200 and highestPrice <= player.currentMoney:
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
-                    elif highestPrice >= 20 and highestPrice <= 40:
-                        if PokerHandler.getTwoCardResult(player.cards).score > 18:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR' 
                     else:
-                        if PokerHandler.getTwoCardResult(player.cards).score > 100:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR'
-            if highestPrice == self.players[0].moneyOnTable or self.players[0].currentAlive != 'Alive':
-                self.highestMoney = highestPrice
-                break
-    
-    def dealTurn(self):
-        self.secondMoney()
-
-        for player in self.players:
-            print(player.name+' '+player.currentAlive)
-        self.state = Game.STATE_TURN
-        tempCards = self.gameCards.popCard()
-        self.communityCards.append(tempCards)
-
-        self.eventManager.addEventToQueue(TurnEvent(tempCards, self.players))
-
-    def secondMoney(self):
-        isFirstTime = True
-        highestPrice = self.highestMoney
-        player1Cards = self.players[1].cards + self.communityCards
-        player2Cards = self.players[2].cards + self.communityCards
-        player3Cards = self.players[3].cards + self.communityCards
-        playersCards = [player1Cards, player2Cards, player3Cards]
-        while True:
-            if self.players[0].currentAlive == 'Alive':
-                price = 0
-                if isFirstTime:
-                    player = self.players[0]
-                    print(f'Podaj kwote licytacji (1$ - {player.currentMoney})')
-                    kwota = input()
-                    try:
-                        price = int(kwota)
-                        if price > player.currentMoney or price < 1:
-                            raise ValueError('Niepoprawna wartość kwoty licytacji')
-                        highestPrice += price
-                        player.currentMoney -= price
-                        player.moneyOnTable += price
-                        
-                    except:
-                        raise TypeError('Nie została prawidłowo podana kwota licytacji')
+                        player.currentAlive = 'OOTR' 
+                elif highestPrice > 45 and highestPrice <= 50:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and highestPrice <= player.currentMoney:
+                        if player.riskLevel > 1 and 60 <= player.currentMoney:
+                            highestPrice = 60
+                        elif player.riskLevel > 0 and 57 <= player.currentMoney:
+                            highestPrice = 52
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score > 300 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR' 
+                elif highestPrice > 50 and highestPrice <= 60:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score > 300 and player.riskLevel > 1 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and player.riskLevel > 0 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score >= 3000 and highestPrice <= player.currentMoney:
+                        if 60 <= player.currentMoney:
+                            highestPrice = 60
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR' 
                 else:
-                    player = self.players[0]
-                    if player.moneyOnTable < highestPrice:
-                        print('Najwyzsza stawka na stole: '+str(highestPrice))
-                        print(f'Podaj kwote ktora chcesz polozyc na stol ({highestPrice-player.moneyOnTable}$ - {50-player.moneyOnTable}$) albo wyrownaj(w) albo pas(p)')
-                        kwota = input()
-                        if kwota == 'p':
-                            player.currentAlive = 'OOTR'
-                        elif kwota == 'w':
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            try:
-                                price = int(kwota)
-                                if price > player.currentMoney or price < 1:
-                                    raise ValueError('Niepoprawna wartość kwoty licytacji')
-                                if price < highestPrice - player.moneyOnTable:
-                                    player.currentAlive = 'OOTR'
-                                    price = 0
-                                    print('Za mala kwota aby wyrownac lub podbic')
-                                highestPrice += price
-                                player.currentMoney -= price
-                                player.moneyOnTable += price
-                            except:
-                                raise TypeError('Nie została prawidłowo podana kwota licytacji')
-            isFirstTime = False
-            for i in range(1, len(self.players)):
-                player = self.players[i]
-                if player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
-                    if highestPrice < 35 and highestPrice <= player.currentMoney:
-                        print(PokerHandler.getBestCards(playersCards[i-1]).score)
-                        if PokerHandler.getBestCards(playersCards[i-1]).score > 100:
-                            if player.riskLevel == 1:
-                                if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 45 <= player.currentMoney:
-                                    highestPrice = 40
-                                elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 38 <= player.currentMoney:
-                                    highestPrice = 35
-                                elif 35 <= player.currentMoney:
-                                    highestPrice = 35
-                            elif player.riskLevel == 2:
-                                if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 50 <= player.currentMoney:
-                                    highestPrice = 50
-                                elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 45 <= player.currentMoney:
-                                    highestPrice = 45
-                                elif 40 <= player.currentMoney:
-                                    highestPrice = 40
+                    if PokerHandler.getBestCards(playersCards[i-1]).score >= 5000 and highestPrice <= player.currentMoney:
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
-                    elif highestPrice >= 35 and highestPrice <= 45:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score > 200 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR' 
-                    elif highestPrice > 45 and highestPrice <= 50:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and highestPrice <= player.currentMoney:
-                            if player.riskLevel > 1 and 60 <= player.currentMoney:
-                                highestPrice = 60
-                            elif player.riskLevel > 0 and 57 <= player.currentMoney:
-                                highestPrice = 52
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score > 300 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR' 
-                    elif highestPrice > 50 and highestPrice <= 60:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score > 300 and player.riskLevel > 1 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and player.riskLevel > 0 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score >= 3000 and highestPrice <= player.currentMoney:
-                            if 60 <= player.currentMoney:
-                                highestPrice = 60
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR' 
                     else:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score >= 5000 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR'
-            tempBool = True
-            for i in range(len(self.players)):
-                if self.players[i].moneyOnTable != highestPrice and self.players[i].currentAlive != 'OOTR':
-                    tempBool = False
-            if tempBool:
-                self.highestMoney = highestPrice
-                break
+                        player.currentAlive = 'OOTR'
+        self.highestMoney = highestPrice
+        """tempBool = True
+        for i in range(len(self.players)):
+            if self.players[i].moneyOnTable != highestPrice and self.players[i].currentAlive != 'OOTR':
+                tempBool = False
+        if tempBool:
+            self.highestMoney = highestPrice
+            break"""
     
     def dealRiver(self):
         self.thirdMoney()
 
-        for player in self.players:
+        self.eventManager.addEventToQueue(ClearMoneyEvent())
+        
+        tempBool = True
+        for i in range(len(self.players)):
+            if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
+                tempBool = False
+        if tempBool:
+            for player in self.players:
+                (player.name+' '+player.currentAlive)
+            self.state = Game.STATE_TURN
+            tempCards = self.gameCards.popCard()
+            self.communityCards.append(tempCards)
+
+            self.isFirstTime = True
+            self.eventManager.addEventToQueue(RiverEvent(tempCards, self.players))
+        else:
+            self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
+                    str(self.highestMoney)))
+
+        """for player in self.players:
             print(player.name+' '+player.currentAlive)
         self.state = Game.STATE_RIVER
         tempCards = self.gameCards.popCard()
         self.communityCards.append(tempCards)
 
-        self.eventManager.addEventToQueue(RiverEvent(tempCards, self.players))
+        self.eventManager.addEventToQueue(RiverEvent(tempCards, self.players))"""
 
     def thirdMoney(self):
-        isFirstTime = True
+        #isFirstTime = True
         highestPrice = self.highestMoney
         player1Cards = self.players[1].cards + self.communityCards
         player2Cards = self.players[2].cards + self.communityCards
         player3Cards = self.players[3].cards + self.communityCards
         playersCards = [player1Cards, player2Cards, player3Cards]
-        while True:
-            if self.players[0].currentAlive == 'Alive':
-                price = 0
-                if isFirstTime:
-                    player = self.players[0]
-                    print(f'Podaj kwote licytacji (1$ - {player.currentMoney})')
-                    kwota = input()
-                    try:
-                        price = int(kwota)
-                        if price > player.currentMoney or price < 1:
-                            raise ValueError('Niepoprawna wartość kwoty licytacji')
-                        highestPrice += price
-                        player.currentMoney -= price
-                        player.moneyOnTable += price
-                        
-                    except:
-                        raise TypeError('Nie została prawidłowo podana kwota licytacji')
-                else:
-                    player = self.players[0]
-                    if player.moneyOnTable < highestPrice:
-                        print('Najwyzsza stawka na stole: '+str(highestPrice))
-                        print(f'Podaj kwote ktora chcesz polozyc na stol ({highestPrice-player.moneyOnTable}$ - {50-player.moneyOnTable}$) albo wyrownaj(w) albo pas(p)')
-                        kwota = input()
-                        if kwota == 'p':
-                            player.currentAlive = 'OOTR'
-                        elif kwota == 'w':
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            try:
-                                price = int(kwota)
-                                if price > player.currentMoney or price < 1:
-                                    raise ValueError('Niepoprawna wartość kwoty licytacji')
-                                if price < highestPrice - player.moneyOnTable:
-                                    player.currentAlive = 'OOTR'
-                                    price = 0
-                                    print('Za mala kwota aby wyrownac lub podbic')
-                                highestPrice += price
-                                player.currentMoney -= price
-                                player.moneyOnTable += price
-                            except:
-                                raise TypeError('Nie została prawidłowo podana kwota licytacji')
-            isFirstTime = False
-            
-            for i in range(1, len(self.players)):
-                player = self.players[i]
-                if player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
-                    if highestPrice < 40 and highestPrice <= player.currentMoney:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score > 200:
-                            if player.riskLevel == 1:
-                                if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 55 <= player.currentMoney:
-                                    highestPrice = 55
-                                elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 49 <= player.currentMoney:
-                                    highestPrice = 49
-                                elif 44 <= player.currentMoney:
-                                    highestPrice = 44
-                            elif player.riskLevel == 2:
-                                if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 58 <= player.currentMoney:
-                                    highestPrice = 58
-                                elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 54 <= player.currentMoney:
-                                    highestPrice = 54
-                                elif 50 <= player.currentMoney:
-                                    highestPrice = 50
+        #while True:
+        if self.players[0].currentAlive == 'Alive':
+            price = 0
+            if self.isFirstTime:
+                player = self.players[0]
+                #print(f'Podaj kwote licytacji (1$ - {player.currentMoney})')
+                kwota = self.moneyText
+                try:
+                    price = int(kwota)
+                    if price > player.currentMoney or price < 1:
+                        raise ValueError('Niepoprawna wartość kwoty licytacji')
+                    highestPrice += price
+                    player.currentMoney -= price
+                    player.moneyOnTable += price
+                    
+                except:
+                    raise TypeError('Nie została prawidłowo podana kwota licytacji')
+            else:
+                player = self.players[0]
+                if player.moneyOnTable < highestPrice:
+                    #print('Najwyzsza stawka na stole: '+str(highestPrice))
+                    #print(f'Podaj kwote ktora chcesz polozyc na stol ({highestPrice-player.moneyOnTable}$ - {50-player.moneyOnTable}$) albo wyrownaj(w) albo pas(p)')
+                    kwota = self.moneyText
+                    if kwota == 'p':
+                        player.currentAlive = 'OOTR'
+                    elif kwota == 'w':
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
-                    elif highestPrice >= 40 and highestPrice <= 50:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score > 200:
-                            if player.riskLevel == 1:
-                                if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 55 <= player.currentMoney:
-                                    highestPrice = 55
-                            elif player.riskLevel == 2:
-                                if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 58 <= player.currentMoney:
-                                    highestPrice = 58
-                                elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 54 <= player.currentMoney:
-                                    highestPrice = 54
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR'
-                    elif highestPrice > 50 and highestPrice <= 55:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and highestPrice <= player.currentMoney:
-                            if player.riskLevel > 1 and 66 <= player.currentMoney:
-                                highestPrice = 66
-                            elif player.riskLevel > 0 and 60 <= player.currentMoney:
-                                highestPrice = 60
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score > 300 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR' 
-                    elif highestPrice > 55 and highestPrice <= 60:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score > 250 and player.riskLevel > 1 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score >= 1000 and player.riskLevel > 0 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score >= 3000 and highestPrice <= player.currentMoney:
-                            if 65 <= player.currentMoney:
-                                highestPrice = 65
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR' 
-                    elif highestPrice > 60 and highestPrice <= 65:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score > 300 and player.riskLevel > 1 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and player.riskLevel > 0 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        elif PokerHandler.getBestCards(playersCards[i-1]).score >= 3000 and highestPrice <= player.currentMoney:
-                            if 70 <= player.currentMoney:
-                                highestPrice = 70
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR' 
                     else:
-                        if PokerHandler.getBestCards(playersCards[i-1]).score >= 5000 and highestPrice <= player.currentMoney:
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                        else:
-                            player.currentAlive = 'OOTR'
-            tempBool = True
-            for i in range(len(self.players)):
-                if self.players[i].moneyOnTable != highestPrice and self.players[i].currentAlive != 'OOTR':
-                    tempBool = False
-            if tempBool:
-                self.highestMoney = highestPrice
-                break
+                        try:
+                            price = int(kwota)
+                            if price > player.currentMoney or price < 1:
+                                raise ValueError('Niepoprawna wartość kwoty licytacji')
+                            if price < highestPrice - player.moneyOnTable:
+                                player.currentAlive = 'OOTR'
+                                price = 0
+                                print('Za mala kwota aby wyrownac lub podbic')
+                            highestPrice += price
+                            player.currentMoney -= price
+                            player.moneyOnTable += price
+                        except:
+                            raise TypeError('Nie została prawidłowo podana kwota licytacji')
+        self.isFirstTime = False
+        
+        for i in range(1, len(self.players)):
+            player = self.players[i]
+            if player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
+                if highestPrice < 40 and highestPrice <= player.currentMoney:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score > 200:
+                        if player.riskLevel == 1:
+                            if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 55 <= player.currentMoney:
+                                highestPrice = 55
+                            elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 49 <= player.currentMoney:
+                                highestPrice = 49
+                            elif 44 <= player.currentMoney:
+                                highestPrice = 44
+                        elif player.riskLevel == 2:
+                            if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 58 <= player.currentMoney:
+                                highestPrice = 58
+                            elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 54 <= player.currentMoney:
+                                highestPrice = 54
+                            elif 50 <= player.currentMoney:
+                                highestPrice = 50
+                    player.currentMoney -= highestPrice - player.moneyOnTable
+                    player.moneyOnTable += highestPrice - player.moneyOnTable
+                elif highestPrice >= 40 and highestPrice <= 50:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score > 200:
+                        if player.riskLevel == 1:
+                            if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 55 <= player.currentMoney:
+                                highestPrice = 55
+                        elif player.riskLevel == 2:
+                            if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and 58 <= player.currentMoney:
+                                highestPrice = 58
+                            elif PokerHandler.getBestCards(playersCards[i-1]).score > 500 and 54 <= player.currentMoney:
+                                highestPrice = 54
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR'
+                elif highestPrice > 50 and highestPrice <= 55:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and highestPrice <= player.currentMoney:
+                        if player.riskLevel > 1 and 66 <= player.currentMoney:
+                            highestPrice = 66
+                        elif player.riskLevel > 0 and 60 <= player.currentMoney:
+                            highestPrice = 60
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score > 300 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR' 
+                elif highestPrice > 55 and highestPrice <= 60:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score > 250 and player.riskLevel > 1 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score >= 1000 and player.riskLevel > 0 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score >= 3000 and highestPrice <= player.currentMoney:
+                        if 65 <= player.currentMoney:
+                            highestPrice = 65
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR' 
+                elif highestPrice > 60 and highestPrice <= 65:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score > 300 and player.riskLevel > 1 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score >= 2000 and player.riskLevel > 0 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    elif PokerHandler.getBestCards(playersCards[i-1]).score >= 3000 and highestPrice <= player.currentMoney:
+                        if 70 <= player.currentMoney:
+                            highestPrice = 70
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR' 
+                else:
+                    if PokerHandler.getBestCards(playersCards[i-1]).score >= 5000 and highestPrice <= player.currentMoney:
+                        player.currentMoney -= highestPrice - player.moneyOnTable
+                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                    else:
+                        player.currentAlive = 'OOTR'
+        self.highestMoney = highestPrice
+        """tempBool = True
+        for i in range(len(self.players)):
+            if self.players[i].moneyOnTable != highestPrice and self.players[i].currentAlive != 'OOTR':
+                tempBool = False
+        if tempBool:
+            self.highestMoney = highestPrice
+            break"""
     
     def showDown(self):
         pass
@@ -659,6 +701,7 @@ class KeyboardController:
     def __init__(self, eventManager, playerName=None):
         self.eventManager = eventManager
         self.eventManager.addListener(self)
+        self.moneyText = ""
 
     def refresh(self, event):
         if isinstance(event, ClockEvent):
@@ -678,8 +721,16 @@ class KeyboardController:
                 elif event.type == pygame.KEYDOWN \
                         and event.key == pygame.K_SPACE:
                     ev = GameStartEvent()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_BACKSPACE:
+                        self.moneyText = self.moneyText[:-1]
+                    else:
+                        self.moneyText += event.unicode
+                    ev = MoneyTextEvent(self.moneyText)
                 if ev:
                     self.eventManager.addEventToQueue(ev)
+        if isinstance(event, ClearMoneyEvent):
+            self.moneyText = ""
 
 
 class TableSprite(pygame.sprite.Sprite):
@@ -749,22 +800,25 @@ class PygameView:
         self.communitySprites = pygame.sprite.RenderUpdates()
 
         self.betsSprites = []
+        self.betsMoneySprites = []
+        self.moneyText = ''
 
 
     def refresh(self, event):
         if isinstance(event, ClockEvent):
 
-            if self.run and not self.gameStarted:
-                self.clock.tick(60)
+            if self.run:
                 eventList = pygame.event.get()
-                self.group.update(eventList)
                 for event in eventList:
                     if event.type == pygame.QUIT:
                         self.run = False
-                self.window.fill((35, 85, 35), (0, 0, 500, 200))
-                self.group.draw(self.window)
-                pygame.display.flip()
 
+                if not self.gameStarted:
+                    self.clock.tick(60)
+                    self.group.update(eventList)
+                    self.window.fill((35, 85, 35), (0, 0, 500, 200))
+                    self.group.draw(self.window)
+                    pygame.display.flip()
 
             if self.button1.onClick() and not self.gameStarted:
                 self.eventManager.addEventToQueue(GameStartEvent())
@@ -797,23 +851,67 @@ class PygameView:
         if isinstance(event, GameStartEvent):
             TableSprite(self.backSprites)
 
+        if isinstance(event, MoneyTextEvent):
+            for sprite in self.betsMoneySprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            self.moneyText = event.text
+            self.betsMoneySprites.append(TextSprite(event.text + " $", (700, 90), 30, (150, 150, 150), self.playerSprites))
+        
+        if isinstance(event, MoneyToEquals):
+            for sprite in self.betsMoneySprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            for sprite in self.betsSprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            self.moneyText = ""
+            self.betsSprites.append(TextSprite(event.text, (700, 50), 30, (150, 150, 150), self.playerSprites))
+
         if isinstance(event, PreFlopEvent):
             firstLicitacja = TextSprite('Podaj kwote licytacji (1$ - 50$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
             self.betsSprites.append(firstLicitacja)
-            """self.textInput = TextInputBox(500, 100, 400)
-            self.group = pygame.sprite.Group(self.textInput)
-            self.window.fill((35, 85, 35), (0, 0, 500, 200))
-            self.group.draw(self.window)
-            pygame.display.flip()"""
             self.showPreFlopCards(event.players)
 
         if isinstance(event, FlopEvent):
+            for sprite in self.betsMoneySprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            for sprite in self.betsSprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            secondLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            self.betsSprites.append(secondLicitacja)
             self.showCommunityCards(event.cardList, event.playersList)
 
         if isinstance(event, TurnEvent):
+            for sprite in self.betsMoneySprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            for sprite in self.betsSprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            thirdLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            self.betsSprites.append(thirdLicitacja)
             self.showTurnCard(event.card, event.playersList)
 
         if isinstance(event, RiverEvent):
+            for sprite in self.betsMoneySprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            for sprite in self.betsSprites:
+                sprite.kill()
+                sprite.rect = None
+                sprite.image = None
+            thirdLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
             self.showRiverCard(event.card, event.playersList)
 
         if isinstance(event, ShowDownEvent):

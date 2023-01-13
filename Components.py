@@ -44,6 +44,7 @@ class TextInputBox(pygame.sprite.Sprite):
     def update(self, event_list):
         for event in event_list:
             if event.type == pygame.KEYDOWN:
+                print('here')
                 if event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1]
                 else:

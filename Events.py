@@ -49,4 +49,19 @@ class ShowDownEvent(Event):
         self.player = player
         self.communityCards = communityCards
         self.cardList = cardList
-        
+
+
+class MoneyTextEvent(Event):
+    def __init__(self, text, maxPrice = 0):
+        self.name = "Money Text event"
+        self.text = text
+
+class MoneyToEquals(Event):
+    def __init__(self, text, maxPrice = 0):
+        self.name = "Money To Equals event"
+        self.maxPrice = maxPrice
+        self.text = text
+
+class ClearMoneyEvent(Event):
+    def __init__(self):
+        self.name = "Clear money event"
