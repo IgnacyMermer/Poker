@@ -5,8 +5,9 @@ class Event:
 
 
 class GameStartEvent(Event):
-    def __init__(self):
+    def __init__(self, playersCount):
         self.name = "The game started"
+        self.playersCount = playersCount
 
 class ClockEvent(Event):
     def __init__(self):
@@ -44,12 +45,12 @@ class RiverEvent(Event):
         self.playersList = playersList
 
 class ShowDownEvent(Event):
-    def __init__(self, player, communityCards, cardList):
+    def __init__(self, players, player, communityCards, cardList):
         self.name = "Show down event"
         self.player = player
+        self.players = players
         self.communityCards = communityCards
         self.cardList = cardList
-
 
 class MoneyTextEvent(Event):
     def __init__(self, text, maxPrice = 0):

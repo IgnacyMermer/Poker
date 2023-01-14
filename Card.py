@@ -91,7 +91,9 @@ class PokerHandler:
 
     @staticmethod
     def getBestCards(cards):
-        if(len(cards) == 5):
+        if len(cards) < 5:
+            return Result('No result', 0)
+        elif(len(cards) == 5):
             sortedCardsList = []
             for card in cards:
                 index = 0
@@ -107,7 +109,6 @@ class PokerHandler:
                 for z in range(0, 6):
                     if z is not i:
                         cuttedList.append(cards[z])
-            
                 sortedCardsList = []
                 for card in cuttedList:
                     index = 0
@@ -130,7 +131,6 @@ class PokerHandler:
                     for z in range(0, 7):
                         if z is not i and z is not j:
                             cuttedList.append(cards[z])
-                
                     sortedCardsList = []
                     for card in cuttedList:
                         index = 0
