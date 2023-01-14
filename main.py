@@ -244,8 +244,14 @@ class Game:
         self.highestMoney = highestPrice
     
     def dealTurn(self):
+        """
+        In this void we check if all players equal their moneyOnTable to highestMoney or they are out of the round. Before this checking
+        we call void secondMoney in which we handle second auction in game. After auction we go to Turn state and update players' money display 
+        on the screen and show one more community card. If the game is over in this state we go to River state and show cards of the winner. 
+        """
 
         self.secondMoney()
+        
         if not self.checkIfEnd():
             self.eventManager.addEventToQueue(ClearMoneyEvent())
             
@@ -382,8 +388,13 @@ class Game:
         self.highestMoney = highestPrice
 
     def dealRiver(self):
+        """
+        We do the same things as in dealFlop and dealTurn functions. We go to function thirdMoney and handle third auction until 
+        all players put the same money as the highest or they resign of the round.
+        """
 
         self.thirdMoney()
+        
         if not self.checkIfEnd():
 
             self.eventManager.addEventToQueue(ClearMoneyEvent())
@@ -644,6 +655,10 @@ class Game:
         self.highestMoney = highestPrice
     
     def checkIfEnd(self):
+        """
+        This function check if in the round is more than one player still playing, if not it return True means that game is over
+        """
+
         countAlive = 0
         for player in self.players:
             if player.currentAlive == 'Alive':
@@ -653,18 +668,31 @@ class Game:
         return True
     
     def showDown(self):
+        """
+        This function changes state to State Showdown and call showDown event to show winner's cards on the screen. Before that it calls 
+        function choiceBestCards which choose the best 5 cards from 7 and assign the result of the round to every player which is still alive
+        """
+
         self.state = Game.STATE_SHOWDOWN
+        
         for player in self.players:
             player.choiceBestCards(self.communityCards)
+        
         if self.players[0].currentAlive != 'Alive' or self.players[0].moneyOnTable != 0:
             winner = self.getWinner()
             self.eventManager.addEventToQueue(ShowDownEvent(self.players, winner, self.communityCards, winner.cards))
 
 
     def getWinner(self):
+        """
+        This function compare all players results and choose the best player in the round. It restarts all player's values to start next round if
+        user will want it.  
+        """
+        
         bestScore = 0
         bestPlayer = None
         allMoneyOnTable = 0
+        
         for player in self.players:
             if player.roundResult is not None:
                 if player.roundResult.score > bestScore and player.currentAlive == 'Alive':
@@ -675,7 +703,7 @@ class Game:
                     bestPlayer = player
             allMoneyOnTable += player.moneyOnTable
             player.moneyOnTable = 0
-            #player.roundResult = None
+            player.roundResult = None
             player.currentAlive = 'Alive'
             player.cards = []
 
@@ -684,6 +712,11 @@ class Game:
 
 
 class TextSprite(pygame.sprite.Sprite):
+
+    """
+    This class is using Sprite, pygame sublibraly. It allows to display text on the screen and changing its color, position, text and size.
+    The function writeSomething is rendering with pygame the changes.
+    """
 
     def __init__(self, text, position, size, color, group=None):
         pygame.sprite.Sprite.__init__(self, group)
@@ -721,10 +754,17 @@ class TextSprite(pygame.sprite.Sprite):
 
 class CardSprite(pygame.sprite.Sprite):
 
+    """
+    This class is using Sprite, pygame sublibraly. It allows to display card on the screen and changing its position and card image.
+    Functions update, getDelX, getDelY allows also for changing position of the card on the screen in slow motion which makes a
+    pretty animation. Funtion getCardImageName allows to take the name of the file in images folder and download this image with pygame
+    and then display as the card. 
+    """
+
     def __init__(self, card, pos1,  pos2, type, image = '', group=None):
         pygame.sprite.Sprite.__init__(self, group)
         if image == '':
-            image = pygame.image.load(self.GetCardImageName(card))
+            image = pygame.image.load(self.getCardImageName(card))
         else:
             image = pygame.image.load(image)
         self.srcImage = image
@@ -741,35 +781,35 @@ class CardSprite(pygame.sprite.Sprite):
         if(self.type == Card.PLAYER_CARD or self.type == Card.COMMUNITY_CARD):
             if self.pos2[0] - self.pos1[0] < 0 \
                 and self.pos2[0] <= self.pos[0]:
-                self.pos[0] += self.GetDelX(0.6, seconds)
+                self.pos[0] += self.getDelX(0.6, seconds)
                 if self.pos[0] <= self.pos2[0]:
                     self.pos[0] = self.pos2[0]
             if self.pos2[0] - self.pos1[0] >= 0 \
                 and self.pos2[0] >= self.pos[0]:
-                self.pos[0] += self.GetDelX(0.6, seconds)
+                self.pos[0] += self.getDelX(0.6, seconds)
                 if self.pos[0] >= self.pos2[0]:
                     self.pos[0] = self.pos2[0]
             if self.pos2[1] - self.pos1[1] < 0 \
                 and self.pos2[1] <= self.pos[1]:
-                self.pos[1] += self.GetDelY(0.6, seconds)
+                self.pos[1] += self.getDelY(0.6, seconds)
                 if self.pos[1] <= self.pos2[1]:
                     self.pos[1] = self.pos2[1]
             if self.pos2[1] - self.pos1[1] >= 0 \
                 and self.pos2[1] >= self.pos[1]:
-                self.pos[1] += self.GetDelY(0.6, seconds)
+                self.pos[1] += self.getDelY(0.6, seconds)
                 if self.pos[1] >= self.pos2[1]:
                     self.pos[1] = self.pos2[1]
 
         self.rect.centerx = round(self.pos[0], 0)
         self.rect.centery = round(self.pos[1], 0)
 
-    def GetDelX(self, speed, seconds):
+    def getDelX(self, speed, seconds):
         return (-1.0) *(self.pos1[0] - self.pos2[0]) / seconds / speed
 
-    def GetDelY(self, speed, seconds):
+    def getDelY(self, speed, seconds):
         return (-1.0) *(self.pos1[1] - self.pos2[1]) / seconds / speed
 
-    def GetCardImageName(self, card):
+    def getCardImageName(self, card):
             color = card.getColor()
             rank = card.getRank()
 
@@ -800,6 +840,11 @@ class CardSprite(pygame.sprite.Sprite):
             return tempStr
 
 class EventListener:
+
+    """
+    This class is to handle all new listeners and events, it allows to add new event which is handle in every listener, it means in every class 
+    which have a refresh function and in init function add itself to listeners.
+    """
 
     def __init__(self):
         self.listeners = {}
@@ -836,7 +881,12 @@ class EventListener:
 
 class KeyboardController:
 
-    def __init__(self, eventManager, playerName=None):
+    """
+    This class is to handle all events on user keyboard, if user click any button on the keyboard, with next clock event this key event is 
+    handle and right event is called
+    """
+
+    def __init__(self, eventManager):
         self.eventManager = eventManager
         self.eventManager.addListener(self)
         self.moneyText = ""
@@ -871,6 +921,11 @@ class KeyboardController:
 
 
 class TableSprite(pygame.sprite.Sprite):
+
+    """
+    This class is using Sprite, pygame sublibraly. It allows to set the background to default.
+    """
+
     def __init__(self, group=None):
         pygame.sprite.Sprite.__init__(self, group)
         tableSurf = pygame.Surface((1400, 800))
@@ -881,8 +936,11 @@ class TableSprite(pygame.sprite.Sprite):
         self.rect = (0, 0)
 
 
-
 class PygameView:
+
+    """
+    This class connects program with pygame. It runs Pygame application, set screen size, title of the program etc. It connects itself with listeners.
+    """
 
     def __init__(self, eventManager):
         self.eventManager = eventManager
@@ -939,6 +997,12 @@ class PygameView:
 
 
     def refresh(self, event):
+
+        """
+        This function allows to handle events if the user click on button or quit the application. It also allows to refresh data on the screen 
+        with every clock event. It checks events in eventManager and do adequate updates on the screen to every event.  
+        """
+
         if isinstance(event, ClockEvent):
 
             if self.run:
@@ -1072,6 +1136,10 @@ class PygameView:
 
     def showPreFlopCards(self, players):
 
+        """
+        This function shows two cards to every player, but user see only its cards, other players' cards are hidden
+        """
+
         POS_LEFT = 0
         POS_TOP = 0
 
@@ -1099,6 +1167,11 @@ class PygameView:
 
 
     def showCommunityCards(self, cardList, players):
+
+        """
+        This function shows 3 community cards in the centre of the screen
+        """
+
         self.scoreSprites = []
         for player in players:
             playerPos = player.position
@@ -1128,6 +1201,11 @@ class PygameView:
             CardSprite(card, Card.CARDS_POSITION, (350 + i * 100, 350), Card.COMMUNITY_CARD, '', self.communitySprites)
 
     def showTurnCard(self, card, players):
+
+        """
+        This function shows 1 more community card in the same row as the previous cards
+        """
+
         for sprite in self.scoreSprites:
             sprite.rect = None
             sprite.image = None
@@ -1160,6 +1238,11 @@ class PygameView:
         CardSprite(card, Card.CARDS_POSITION, (750, 350), Card.COMMUNITY_CARD, '', self.communitySprites)
 
     def showRiverCard(self, card, players):
+        
+        """
+        This function shows the fifth community card in the same row as the previous cards, this is the last community card
+        """
+
         for sprite in self.scoreSprites:
             sprite.rect = None
             sprite.image = None
@@ -1192,6 +1275,11 @@ class PygameView:
         CardSprite(card, Card.CARDS_POSITION, (850, 350), Card.COMMUNITY_CARD, '', self.communitySprites)
     
     def showDownResult(self, players, player, communityCards, cardsList):
+
+        """
+        This function clear the screen from previous cards and display who is the winner and what cards the winner has
+        """
+
         for sprite in self.scoreSprites:
             sprite.rect = None
             sprite.image = None
