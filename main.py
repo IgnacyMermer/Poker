@@ -82,6 +82,7 @@ class Game:
                     self.start()
             else:
                 self.state = Game.STATE_START
+                self.isFirstTime = True
                 self.startNextRound()
 
         elif isinstance(event, NextMoveEvent):
@@ -156,8 +157,6 @@ class Game:
                 if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
                     tempBool = False
             if tempBool:
-                for player in self.players:
-                    print(player.name+' '+player.currentAlive)
                 self.state = Game.STATE_FLOP
                 for i in range(3):
                     self.communityCards.append(self.gameCards.popCard())
@@ -169,17 +168,8 @@ class Game:
                         str(self.highestMoney)))
         else:
             self.state = Game.STATE_RIVER
-            """playerAlive = None
-            for player in self.players:
-                if player.currentAlive == 'Alive':
-                    playerAlive = player
-                    break
-            cards = []
-
-            if playerAlive is not None:
-                cards = playerAlive.cards"""
             playerAlive = self.getWinner()
-            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, cards))
+            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
     
     def firstMoney(self):
         """
@@ -196,11 +186,11 @@ class Game:
             self.moneyText = ""
             try:
                 price = int(kwota)
+                if price > player.currentMoney/2 or price < 1:
+                    raise ValueError('Niepoprawna wartość kwoty licytacji')
                 highestPrice = price
                 player.currentMoney -= price
                 player.moneyOnTable += price
-                if price > 50 or price < 1:
-                    raise ValueError('Niepoprawna wartość kwoty licytacji')
             except:
                 raise TypeError('Nie została prawidłowo podana kwota licytacji')
         else:
@@ -215,7 +205,7 @@ class Game:
                 else:
                     try:
                         price = int(kwota)
-                        if price > 50 or price < 1:
+                        if price > player.currentMoney/2 or price < 1:
                             raise ValueError('Niepoprawna wartość kwoty licytacji')
                         if price < highestPrice - player.moneyOnTable:
                             player.currentAlive = 'OOTR'
@@ -229,7 +219,9 @@ class Game:
         self.isFirstTime = False
         for i in range(1, len(self.players)):
             player = self.players[i]
-            if player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
+            if highestPrice - player.moneyOnTable >= player.currentMoney:
+                player.currentAlive = 'OOTR'
+            elif player.currentAlive == 'Alive' and highestPrice > player.moneyOnTable:
                 if highestPrice > 0 and highestPrice < 20:
                     if PokerHandler.getTwoCardResult(self.players[1].cards).score > 18 and \
                     self.players[1].riskLevel > 1:
@@ -275,16 +267,8 @@ class Game:
                         str(self.highestMoney)))
         else:
             self.state = Game.STATE_RIVER
-            """playerAlive = None
-            for player in self.players:
-                if player.currentAlive == 'Alive':
-                    playerAlive = player
-                    break
-            cards = []
-            if playerAlive is not None:
-                cards = playerAlive.cards"""
             playerAlive = self.getWinner()
-            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, cards))
+            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
 
     def secondMoney(self):
         highestPrice = self.highestMoney
@@ -422,16 +406,8 @@ class Game:
                         str(self.highestMoney)))
         else:
             self.state = Game.STATE_RIVER
-            """playerAlive = None
-            for player in self.players:
-                if player.currentAlive == 'Alive':
-                    playerAlive = player
-                    break
-            cards = []
-            if playerAlive is not None:
-                cards = playerAlive.cards"""
             playerAlive = self.getWinner()
-            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, cards))
+            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
 
     def thirdMoney(self):
         highestPrice = self.highestMoney
@@ -680,8 +656,9 @@ class Game:
         self.state = Game.STATE_SHOWDOWN
         for player in self.players:
             player.choiceBestCards(self.communityCards)
-        winner = self.getWinner()
-        self.eventManager.addEventToQueue(ShowDownEvent(self.players, winner, self.communityCards, winner.cards))
+        if self.players[0].currentAlive != 'Alive' or self.players[0].moneyOnTable != 0:
+            winner = self.getWinner()
+            self.eventManager.addEventToQueue(ShowDownEvent(self.players, winner, self.communityCards, winner.cards))
 
 
     def getWinner(self):
@@ -689,12 +666,16 @@ class Game:
         bestPlayer = None
         allMoneyOnTable = 0
         for player in self.players:
-            if player.roundResult.score > bestScore and player.currentAlive == 'Alive':
-                bestScore = player.roundResult.score
-                bestPlayer = player
+            if player.roundResult is not None:
+                if player.roundResult.score > bestScore and player.currentAlive == 'Alive':
+                    bestScore = player.roundResult.score
+                    bestPlayer = player
+            else:
+                if player.currentAlive == 'Alive' and bestScore == 0:
+                    bestPlayer = player
             allMoneyOnTable += player.moneyOnTable
             player.moneyOnTable = 0
-            player.roundResult = None
+            #player.roundResult = None
             player.currentAlive = 'Alive'
             player.cards = []
 
@@ -1044,7 +1025,7 @@ class PygameView:
             self.betsSprites.append(TextSprite(event.text, (700, 50), 30, (150, 150, 150), self.playerSprites))
 
         if isinstance(event, PreFlopEvent):
-            firstLicitacja = TextSprite('Podaj kwote licytacji (1$ - 50$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            firstLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.players[0].currentMoney/2}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
             self.betsSprites.append(firstLicitacja)
             self.showPreFlopCards(event.players)
 
