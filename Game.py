@@ -222,7 +222,6 @@ class Game:
         """
 
         self.secondMoney()
-        print(self.checkIfEnd())
         if not self.checkIfEnd():
             self.eventManager.addEventToQueue(ClearMoneyEvent())
             
@@ -243,7 +242,6 @@ class Game:
                 self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
                         str(self.highestMoney)))
         else:
-            print('lalal')
             self.state = Game.STATE_RIVER
             playerAlive = self.getWinner()
             self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
@@ -307,7 +305,6 @@ class Game:
             if highestPrice - player.moneyOnTable >= player.currentMoney:
                 player.currentAlive = 'OOTR'
             elif player.currentAlive == 'Alive' and (highestPrice > player.moneyOnTable or self.players[0].currentAlive == 'OOTR'):
-                print(highestPrice)
                 if highestPrice < 35 and highestPrice <= player.currentMoney:
                     if PokerHandler.getBestCards(playersCards[i-1]).score > 100:
                         if player.riskLevel == 1:

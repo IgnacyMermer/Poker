@@ -5,8 +5,6 @@ from Components import *
 from Sprites import *
 
 
-
-
 class Card:
     PLAYER_CARD = 'playerCard'
     COMMUNITY_CARD = 'communityCard'
@@ -29,7 +27,6 @@ class GameCards:
     def initializeCards(self):
         self.gameCards = []
 
-        # write some codes for initialize the deck
         for i in range(0, 4):
             for j in range(2, 15):
                 self.gameCards.append(Card(i, j))
@@ -57,6 +54,10 @@ class Result:
 
 
 class PokerHandler:
+    """
+    Below are 7 seven state which describes and tells the app in which moment of the game the app is
+    """
+
     ROYAL_POKER = ['Royal_Poker', 10000]
     POKER = ['Poker', 5000]
     CARRIAGE = ['Carriage', 3000]
@@ -75,6 +76,11 @@ class PokerHandler:
 
     @staticmethod
     def compareTwoPlayerCards(player1, player2):
+        """
+        This function takes two players as parameters and return 1 if first player result of the round is higher, returns -1 if 
+        second player has higher result and 0 if there is a draw between them.
+        """
+        
         result1 = player1.roundResult
         result2 = player2.roundResult
         if result1.score < result2.score:
@@ -94,8 +100,13 @@ class PokerHandler:
 
     @staticmethod
     def getBestCards(cards):
-        if len(cards) < 5:
-            return Result('No result', 0)
+        """
+        This function check how many cards the program passed as the parameter and then void returnResult function for every 5 cards 
+        in passed cards. Then function returns the best result
+        """
+
+        if len(cards) < 5 or len(cards) > 7:
+            return ValueError('The parameter should contain 5/6/7 cards', 0)
         elif(len(cards) == 5):
             sortedCardsList = []
             for card in cards:
@@ -154,6 +165,12 @@ class PokerHandler:
     
     @staticmethod
     def returnResult(sortedCardsList):
+        """
+        This function checks if sorted cards passed in parameter are any cards figure. It returns the result consisting of default
+        score value for card figure and extra points for the highest card, but this extra points can't exceed next card figure score 
+        value in the table.
+        """
+
         if sortedCardsList[0].rank == 10 and sortedCardsList[1].rank == 11 and sortedCardsList[2].rank == 12 and \
         sortedCardsList[3].rank == 13 and sortedCardsList[4].rank == 14 and PokerHandler.isTheSameColor(sortedCardsList):
             return Result(PokerHandler.ROYAL_POKER[0], PokerHandler.ROYAL_POKER[1])
@@ -222,6 +239,13 @@ class PokerHandler:
     
     @staticmethod
     def getTwoCardResult(cards):
+        """
+        This function checks if two cards passed as the parameter are pair or two different cards and return result for
+        these cards.
+        """
+
+        if len(cards) != 2:
+            raise ValueError("Not two cards passed as the parameter")
         sortedCardsList = []
         for card in cards:  
             index = 0

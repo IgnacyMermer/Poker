@@ -1,6 +1,7 @@
 from Events import *
 import pygame
 
+
 class EventListener:
 
     """
@@ -19,7 +20,7 @@ class EventListener:
 
     def refreshListeners(self):
         for listener in self.newListeners:
-            self.listeners[listener] = 1
+            self.listeners[listener] = None
         for listener in self.oldListeners:
             if listener in self.listeners:
                 del self.listeners[listener]
@@ -36,6 +37,10 @@ class EventListener:
         self.events = []
     
     def addEventToQueue(self, event):
+        """
+        This function allows to add new event to queue, refresh listeners and void refresh function in every listener
+        """
+
         self.events.append(event)
         if isinstance(event, ClockEvent):
             self.refreshListeners()
