@@ -3,7 +3,7 @@ from pygame import *
 from Events import *
 from Components import *
 from Sprites import *
-from Player import *
+
 
 
 
@@ -31,7 +31,7 @@ class GameCards:
 
         # write some codes for initialize the deck
         for i in range(0, 4):
-            for j in range(2, 13):
+            for j in range(2, 15):
                 self.gameCards.append(Card(i, j))
 
     def mixCards(self):
@@ -154,11 +154,11 @@ class PokerHandler:
     
     @staticmethod
     def returnResult(sortedCardsList):
-        if sortedCardsList[0].rank == 9 and sortedCardsList[1].rank == 10 and sortedCardsList[2].rank == 11 and \
-        sortedCardsList[3].rank == 12 and sortedCardsList[4].rank == 13 and PokerHandler.isTheSameColor(sortedCardsList):
+        if sortedCardsList[0].rank == 10 and sortedCardsList[1].rank == 11 and sortedCardsList[2].rank == 12 and \
+        sortedCardsList[3].rank == 13 and sortedCardsList[4].rank == 14 and PokerHandler.isTheSameColor(sortedCardsList):
             return Result(PokerHandler.ROYAL_POKER[0], PokerHandler.ROYAL_POKER[1])
-        elif sortedCardsList[4].rank == 13 and PokerHandler.isTheSameColor(sortedCardsList) and sortedCardsList[0].rank == 0 and \
-            sortedCardsList[1].rank == 1 and sortedCardsList[2].rank == 2 and sortedCardsList[3].rank == 3:
+        elif sortedCardsList[4].rank == 14 and PokerHandler.isTheSameColor(sortedCardsList) and sortedCardsList[0].rank == 2 and \
+            sortedCardsList[1].rank == 3 and sortedCardsList[2].rank == 4 and sortedCardsList[3].rank == 5:
             return Result(PokerHandler.ROYAL_POKER[0], PokerHandler.ROYAL_POKER[1]-100)
         elif PokerHandler.isTheSameColor(sortedCardsList) and sortedCardsList[1].rank == sortedCardsList[0].rank + 1 and \
             sortedCardsList[2].rank == sortedCardsList[0].rank + 2 and sortedCardsList[3].rank == sortedCardsList[0].rank + 3 and \
@@ -234,6 +234,3 @@ class PokerHandler:
             return Result(PokerHandler.SINGLE_PAIR[0], PokerHandler.SINGLE_PAIR[1] + additionalScore)
         else:
             return Result(PokerHandler.HIGH_CARD[0], PokerHandler.HIGH_CARD[1] + sortedCardsList[1].rank)
-
-
-#PokerHandler.getBestCards([Card('serce', 10), Card('serce', 9), Card('serce', 11), Card('serce', 13), Card('serce', 12), Card('dzwonek', 2), Card('zoladz', 5)])

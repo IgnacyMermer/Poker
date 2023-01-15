@@ -119,16 +119,16 @@ class CardSprite(pygame.sprite.Sprite):
             elif color == 3:
                 colorStr = 'zoladz'
 
-            if rank == 13:
-                rankStr = 'as'
-            elif rank > 0 and rank < 10:
-                rankStr = str(rank +1)
-            elif rank == 10:
-                rankStr = 'jopek'
+            if rank > 1 and rank <= 10:
+                rankStr = str(rank)
             elif rank == 11:
-                rankStr = 'dama'
+                rankStr = 'jopek'
             elif rank == 12:
+                rankStr = 'dama'
+            elif rank == 13:
                 rankStr = 'krol'
+            elif rank == 14:
+                rankStr = 'as'
 
             tempStr = f'images/{rankStr}_{colorStr}.png'
             return tempStr

@@ -21,10 +21,8 @@ class Player:
 
     def addCards(self, card):
         """This function add card to player's cards"""
+
         self.cards.append(card)
-    
-    def initCards(self):
-        self.cards = []
 
     def choiceBestCards(self, communityCards):
         """This function void another functions which join user's cards and community's cards and choice the best 5 cards from seven and return result, 

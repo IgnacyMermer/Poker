@@ -160,7 +160,7 @@ class PygameView:
             self.betsSprites.append(TextSprite(event.text, (700, 50), 30, (150, 150, 150), self.playerSprites))
 
         if isinstance(event, PreFlopEvent):
-            firstLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.players[0].currentMoney/2}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            firstLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.players[0].currentMoney/2}$) albo pas (p)', (700, 50), 30, (150, 150, 150), self.playerSprites)
             self.betsSprites.append(firstLicitacja)
             self.showPreFlopCards(event.players)
 
@@ -173,7 +173,7 @@ class PygameView:
                 sprite.kill()
                 sprite.rect = None
                 sprite.image = None
-            secondLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            secondLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$) albo pas (p)', (700, 50), 30, (150, 150, 150), self.playerSprites)
             self.betsSprites.append(secondLicitacja)
             self.showCommunityCards(event.cardList, event.playersList)
 
@@ -186,7 +186,7 @@ class PygameView:
                 sprite.kill()
                 sprite.rect = None
                 sprite.image = None
-            thirdLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            thirdLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$) albo pas (p)', (700, 50), 30, (150, 150, 150), self.playerSprites)
             self.betsSprites.append(thirdLicitacja)
             self.showTurnCard(event.card, event.playersList)
 
@@ -199,7 +199,7 @@ class PygameView:
                 sprite.kill()
                 sprite.rect = None
                 sprite.image = None
-            thirdLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            thirdLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$) albo pas (p)', (700, 50), 30, (150, 150, 150), self.playerSprites)
             self.showRiverCard(event.card, event.playersList)
 
         if isinstance(event, ShowDownEvent):
