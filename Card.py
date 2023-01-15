@@ -1,6 +1,9 @@
 import random
-from main import *
-
+from pygame import *
+from Events import *
+from Components import *
+from Sprites import *
+from Player import *
 
 
 
@@ -233,4 +236,4 @@ class PokerHandler:
             return Result(PokerHandler.HIGH_CARD[0], PokerHandler.HIGH_CARD[1] + sortedCardsList[1].rank)
 
 
-PokerHandler.getBestCards([Card('serce', 10), Card('serce', 9), Card('serce', 11), Card('serce', 13), Card('serce', 12), Card('dzwonek', 2), Card('zoladz', 5)])
+#PokerHandler.getBestCards([Card('serce', 10), Card('serce', 9), Card('serce', 11), Card('serce', 13), Card('serce', 12), Card('dzwonek', 2), Card('zoladz', 5)])

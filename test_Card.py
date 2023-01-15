@@ -1,4 +1,4 @@
-from Card import *
+from CardFile import *
 
 def test_sortedCards():
     card1 = Card('czerwien', 10)
