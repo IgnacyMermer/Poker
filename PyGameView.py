@@ -200,6 +200,7 @@ class PygameView:
                 sprite.rect = None
                 sprite.image = None
             thirdLicitacja = TextSprite(f'Podaj kwote licytacji (1$ - {event.playersList[0].currentMoney}$) albo pas (p)', (700, 50), 30, (150, 150, 150), self.playerSprites)
+            self.betsSprites.append(thirdLicitacja)
             self.showRiverCard(event.card, event.playersList)
 
         if isinstance(event, ShowDownEvent):
