@@ -20,7 +20,7 @@ class EventListener:
 
     def refreshListeners(self):
         for listener in self.newListeners:
-            self.listeners[listener] = None
+            self.listeners[listener] = 1
         for listener in self.oldListeners:
             if listener in self.listeners:
                 del self.listeners[listener]

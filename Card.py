@@ -20,6 +20,7 @@ class Card:
     def getColor(self):
         return self.color
 
+
 class GameCards:
     def __init__(self):
         self.gameCards = []
@@ -104,10 +105,11 @@ class PokerHandler:
         This function check how many cards the program passed as the parameter and then void returnResult function for every 5 cards 
         in passed cards. Then function returns the best result
         """
-
-        if len(cards) < 5 or len(cards) > 7:
-            return ValueError('The parameter should contain 5/6/7 cards', 0)
-        elif(len(cards) == 5):
+        
+        #if len(cards) < 5 or len(cards) > 7:
+         #   return ValueError('The parameter should contain 5/6/7 cards', 0)
+        #el
+        if(len(cards) == 5):
             sortedCardsList = []
             for card in cards:
                 index = 0
