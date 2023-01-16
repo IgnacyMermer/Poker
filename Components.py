@@ -10,7 +10,6 @@ class Button:
 
         screen.blit(self.image, ((x-self.image.get_width())/2, y))
 
-
     def onClick(self):
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos):
@@ -19,7 +18,6 @@ class Button:
 
         return False
 
-        
 
 class TextInputBox(pygame.sprite.Sprite):
     def __init__(self, x, y, width):
@@ -33,12 +31,15 @@ class TextInputBox(pygame.sprite.Sprite):
         self.renderText()
 
     def renderText(self):
-        fontText = self.font.render(self.text, True, self.color, self.backcolor)
-        self.image = pygame.Surface((max(self.width, fontText.get_width()+10), fontText.get_height()+10), pygame.SRCALPHA)
+        fontText = self.font.render(self.text, True, self.color,
+                                    self.backcolor)
+        self.image = pygame.Surface((max(self.width, fontText.get_width()+10),
+                                    fontText.get_height()+10), pygame.SRCALPHA)
         if self.backcolor:
             self.image.fill(self.backcolor)
         self.image.blit(fontText, (5, 5))
-        pygame.draw.rect(self.image, self.color, self.image.get_rect().inflate(-2, -2), 2)
+        pygame.draw.rect(self.image, self.color, self.image.get_rect()
+                         .inflate(-2, -2), 2)
         self.rect = self.image.get_rect(topleft = self.pos)
 
     def update(self, event_list):

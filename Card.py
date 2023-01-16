@@ -43,7 +43,7 @@ class GameCards:
                 tempCard = self.gameCards.pop()
                 mixedCards.append(tempCard)
         self.gameCards = mixedCards
-    
+
     def popCard(self):
         return self.gameCards.pop()
 
@@ -81,7 +81,7 @@ class PokerHandler:
         This function takes two players as parameters and return 1 if first player result of the round is higher, returns -1 if 
         second player has higher result and 0 if there is a draw between them.
         """
-        
+
         result1 = player1.roundResult
         result2 = player2.roundResult
         if result1.score < result2.score:
@@ -90,7 +90,7 @@ class PokerHandler:
             return 1
         else:
             return 0
-    
+
     @staticmethod
     def isTheSameColor(cards):
         color = cards[0].color
@@ -105,11 +105,8 @@ class PokerHandler:
         This function check how many cards the program passed as the parameter and then void returnResult function for every 5 cards 
         in passed cards. Then function returns the best result
         """
-        
-        #if len(cards) < 5 or len(cards) > 7:
-         #   return ValueError('The parameter should contain 5/6/7 cards', 0)
-        #el
-        if(len(cards) == 5):
+
+        if len(cards) == 5:
             sortedCardsList = []
             for card in cards:
                 index = 0
@@ -118,7 +115,7 @@ class PokerHandler:
                         index += 1
                 sortedCardsList.insert(index, card)
             return PokerHandler.returnResult(sortedCardsList)
-        elif(len(cards) == 6):
+        elif len(cards) == 6:
             scoresList = []
             for i in range(0, 6):
                 cuttedList = []
@@ -141,7 +138,7 @@ class PokerHandler:
             return bestScore
         else:
             scoresList = []
-            for i in range(0,6):
+            for i in range(0, 6):
                 for j in range(i+1, 7):
                     cuttedList = []
                     for z in range(0, 7):
@@ -154,36 +151,45 @@ class PokerHandler:
                             if card.rank > tempCard.rank:
                                 index += 1
                         sortedCardsList.insert(index, card)
-                    
-                    scoresList.append(PokerHandler.returnResult(sortedCardsList))
+
+                    scoresList.append(PokerHandler.returnResult(
+                                      sortedCardsList))
             maxRank = 0
             bestScore = {}
             for score in scoresList:
                 if score.score > maxRank:
                     maxRank = score.score
                     bestScore = score
-            return bestScore        
-        
-    
+            return bestScore
+
     @staticmethod
     def returnResult(sortedCardsList):
         """
-        This function checks if sorted cards passed in parameter are any cards figure. It returns the result consisting of default
-        score value for card figure and extra points for the highest card, but this extra points can't exceed next card figure score 
+        This function checks if sorted cards passed in parameter are any cards
+        figure. It returns the result consisting of default
+        score value for card figure and extra points for the highest card, but
+        this extra points can't exceed next card figure score 
         value in the table.
         """
 
-        if sortedCardsList[0].rank == 10 and sortedCardsList[1].rank == 11 and sortedCardsList[2].rank == 12 and \
-        sortedCardsList[3].rank == 13 and sortedCardsList[4].rank == 14 and PokerHandler.isTheSameColor(sortedCardsList):
+        if sortedCardsList[0].rank == 10 and sortedCardsList[1].rank == 11 and\
+            sortedCardsList[2].rank == 12 and \
+            sortedCardsList[3].rank == 13 and sortedCardsList[4].rank == 14 and \
+            PokerHandler.isTheSameColor(sortedCardsList):
             return Result(PokerHandler.ROYAL_POKER[0], PokerHandler.ROYAL_POKER[1])
-        elif sortedCardsList[4].rank == 14 and PokerHandler.isTheSameColor(sortedCardsList) and sortedCardsList[0].rank == 2 and \
-            sortedCardsList[1].rank == 3 and sortedCardsList[2].rank == 4 and sortedCardsList[3].rank == 5:
+        elif sortedCardsList[4].rank == 14 and PokerHandler.isTheSameColor(sortedCardsList) and \
+            sortedCardsList[0].rank == 2 and \
+            sortedCardsList[1].rank == 3 and sortedCardsList[2].rank == 4 and \
+            sortedCardsList[3].rank == 5:
             return Result(PokerHandler.ROYAL_POKER[0], PokerHandler.ROYAL_POKER[1]-100)
-        elif PokerHandler.isTheSameColor(sortedCardsList) and sortedCardsList[1].rank == sortedCardsList[0].rank + 1 and \
-            sortedCardsList[2].rank == sortedCardsList[0].rank + 2 and sortedCardsList[3].rank == sortedCardsList[0].rank + 3 and \
+        elif PokerHandler.isTheSameColor(sortedCardsList) and \
+            sortedCardsList[1].rank == sortedCardsList[0].rank + 1 and \
+            sortedCardsList[2].rank == sortedCardsList[0].rank + 2 and \
+            sortedCardsList[3].rank == sortedCardsList[0].rank + 3 and \
             sortedCardsList[4].rank == sortedCardsList[0].rank + 4:
             return Result(PokerHandler.POKER[0], PokerHandler.POKER[1] + sortedCardsList[4].rank * 100)
-        elif (sortedCardsList[1].rank == sortedCardsList[0].rank and sortedCardsList[2].rank == sortedCardsList[0].rank and \
+        elif (sortedCardsList[1].rank == sortedCardsList[0].rank and \
+            sortedCardsList[2].rank == sortedCardsList[0].rank and \
             sortedCardsList[3].rank == sortedCardsList[0].rank) or \
             (sortedCardsList[1].rank == sortedCardsList[4].rank and sortedCardsList[2].rank == sortedCardsList[4].rank and \
             sortedCardsList[3].rank == sortedCardsList[4].rank):
@@ -209,40 +215,60 @@ class PokerHandler:
             sortedCardsList[4].rank == sortedCardsList[0].rank + 4:
             return Result(PokerHandler.STRIT[0], PokerHandler.STRIT[1] + sortedCardsList[4].rank * 10)
         elif sortedCardsList[1].rank == sortedCardsList[0].rank and sortedCardsList[2].rank == sortedCardsList[0].rank:
-            return Result(PokerHandler.TRIPLE[0], PokerHandler.TRIPLE[1] + sortedCardsList[1].rank * 10)
-        elif sortedCardsList[2].rank == sortedCardsList[4].rank and sortedCardsList[3].rank == sortedCardsList[4].rank:
-            return Result(PokerHandler.TRIPLE[0], PokerHandler.TRIPLE[1] + sortedCardsList[2].rank * 10)
+            return Result(PokerHandler.TRIPLE[0],
+                          PokerHandler.TRIPLE[1] + sortedCardsList[1].rank * 10)
+        elif sortedCardsList[2].rank == sortedCardsList[4].rank and \
+            sortedCardsList[3].rank == sortedCardsList[4].rank:
+            return Result(PokerHandler.TRIPLE[0],
+                          PokerHandler.TRIPLE[1] + sortedCardsList[2].rank * 10)
         elif sortedCardsList[0].rank == sortedCardsList[1].rank:
             if sortedCardsList[2].rank == sortedCardsList[3].rank:
-                additionalScore = sortedCardsList[3].rank * 5 + sortedCardsList[1].rank * 0.3 + sortedCardsList[4].rank * 0.02
-                return Result(PokerHandler.TWO_PAIR[0], PokerHandler.TWO_PAIR[1] + additionalScore)
+                additionalScore = sortedCardsList[3].rank * 5 + \
+                    sortedCardsList[1].rank * 0.3 + sortedCardsList[4].rank * 0.02
+                return Result(PokerHandler.TWO_PAIR[0], 
+                              PokerHandler.TWO_PAIR[1] + additionalScore)
             elif sortedCardsList[3].rank == sortedCardsList[4].rank:
-                additionalScore = sortedCardsList[3].rank * 5 + sortedCardsList[1].rank * 0.3 + sortedCardsList[2].rank * 0.02
-                return Result(PokerHandler.TWO_PAIR[0], PokerHandler.TWO_PAIR[1] + additionalScore)
+                additionalScore = sortedCardsList[3].rank * 5 + \
+                    sortedCardsList[1].rank * 0.3 + sortedCardsList[2].rank * 0.02
+                return Result(PokerHandler.TWO_PAIR[0],
+                              PokerHandler.TWO_PAIR[1] + additionalScore)
             else:
-                additionalScore = sortedCardsList[0].rank * 5 + sortedCardsList[4].rank * 0.3
-                return Result(PokerHandler.SINGLE_PAIR[0], PokerHandler.SINGLE_PAIR[1] + additionalScore)
+                additionalScore = sortedCardsList[0].rank * 5 +\
+                    sortedCardsList[4].rank * 0.3
+                return Result(PokerHandler.SINGLE_PAIR[0],
+                              PokerHandler.SINGLE_PAIR[1] + additionalScore)
         elif sortedCardsList[1].rank == sortedCardsList[2].rank:
             if sortedCardsList[3].rank == sortedCardsList[4].rank:
-                additionalScore = sortedCardsList[4].rank * 5 + sortedCardsList[2].rank * 0.3 + sortedCardsList[0].rank * 0.02
-                return Result(PokerHandler.TWO_PAIR[0], PokerHandler.TWO_PAIR[1] + additionalScore)
+                additionalScore = sortedCardsList[4].rank * 5 + \
+                    sortedCardsList[2].rank * 0.3 + sortedCardsList[0].rank * 0.02
+                return Result(PokerHandler.TWO_PAIR[0],
+                              PokerHandler.TWO_PAIR[1] + additionalScore)
             else:
-                additionalScore = sortedCardsList[1].rank * 5 + sortedCardsList[4].rank * 0.3 + sortedCardsList[3].rank * 0.02
-                return Result(PokerHandler.SINGLE_PAIR[0], PokerHandler.SINGLE_PAIR[1] + additionalScore)
+                additionalScore = sortedCardsList[1].rank * 5 + \
+                    sortedCardsList[4].rank * 0.3 + sortedCardsList[3].rank * 0.02
+                return Result(PokerHandler.SINGLE_PAIR[0],
+                              PokerHandler.SINGLE_PAIR[1] + additionalScore)
         elif sortedCardsList[2].rank == sortedCardsList[3].rank:
-            additionalScore = sortedCardsList[2].rank * 5 + sortedCardsList[4].rank * 0.3 + sortedCardsList[1].rank * 0.02
-            return Result(PokerHandler.SINGLE_PAIR[0], PokerHandler.SINGLE_PAIR[1] + additionalScore)
+            additionalScore = sortedCardsList[2].rank * 5 + \
+                sortedCardsList[4].rank * 0.3 + sortedCardsList[1].rank * 0.02
+            return Result(PokerHandler.SINGLE_PAIR[0],
+                          PokerHandler.SINGLE_PAIR[1] + additionalScore)
         elif sortedCardsList[3].rank == sortedCardsList[4].rank:
-            additionalScore = sortedCardsList[3].rank * 5 + sortedCardsList[2].rank * 0.3 + sortedCardsList[1].rank * 0.02
-            return Result(PokerHandler.SINGLE_PAIR[0], PokerHandler.SINGLE_PAIR[1] + additionalScore)
+            additionalScore = sortedCardsList[3].rank * 5 + \
+                sortedCardsList[2].rank * 0.3 + sortedCardsList[1].rank * 0.02
+            return Result(PokerHandler.SINGLE_PAIR[0],
+                          PokerHandler.SINGLE_PAIR[1] + additionalScore)
         else:
-            additionalScore = sortedCardsList[4].rank * 5 + sortedCardsList[3].rank * 0.3 + sortedCardsList[2].rank * 0.02
-            return Result(PokerHandler.HIGH_CARD[0], PokerHandler.HIGH_CARD[1] + additionalScore)
-    
+            additionalScore = sortedCardsList[4].rank * 5 + \
+                sortedCardsList[3].rank * 0.3 + sortedCardsList[2].rank * 0.02
+            return Result(PokerHandler.HIGH_CARD[0],
+                          PokerHandler.HIGH_CARD[1] + additionalScore)
+
     @staticmethod
     def getTwoCardResult(cards):
         """
-        This function checks if two cards passed as the parameter are pair or two different cards and return result for
+        This function checks if two cards passed as the parameter are pair or 
+        two different cards and return result for
         these cards.
         """
 
@@ -257,6 +283,8 @@ class PokerHandler:
             sortedCardsList.insert(index, card)
         if sortedCardsList[0].rank == sortedCardsList[1].rank:
             additionalScore = sortedCardsList[1].rank * 5
-            return Result(PokerHandler.SINGLE_PAIR[0], PokerHandler.SINGLE_PAIR[1] + additionalScore)
+            return Result(PokerHandler.SINGLE_PAIR[0],
+                          PokerHandler.SINGLE_PAIR[1] + additionalScore)
         else:
-            return Result(PokerHandler.HIGH_CARD[0], PokerHandler.HIGH_CARD[1] + sortedCardsList[1].rank)
+            return Result(PokerHandler.HIGH_CARD[0],
+                          PokerHandler.HIGH_CARD[1] + sortedCardsList[1].rank)

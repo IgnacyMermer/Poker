@@ -1,8 +1,10 @@
 from Card import *
 
+
 class SecondAuction:
     @staticmethod
-    def secondMoney(isFirstTime, highestMoney, players, communityCards, moneyText):
+    def secondMoney(isFirstTime, highestMoney, players, communityCards,
+                    moneyText):
         highestPrice = highestMoney
         player1Cards = players[1].cards + communityCards
         player2Cards = []
@@ -23,13 +25,12 @@ class SecondAuction:
                     else:
                         price = int(kwota)
                         if price > player.currentMoney or price < 1:
-                            raise ValueError('Niepoprawna wartość kwoty licytacji')
+                            raise ValueError('Niepoprawna kwota licytacji')
                         highestPrice += price
                         player.currentMoney -= price
                         player.moneyOnTable += price
-                    
-                except:
-                    raise TypeError('Nie została prawidłowo podana kwota licytacji')
+                except Exception:
+                    raise TypeError('Nieprawidłowo podana kwota licytacji')
             else:
                 player = players[0]
                 if player.moneyOnTable < highestPrice:
@@ -37,13 +38,14 @@ class SecondAuction:
                     if kwota == 'p':
                         player.currentAlive = 'OOTR'
                     elif kwota == 'w':
-                        player.currentMoney -= highestPrice - player.moneyOnTable
-                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                        temp = highestPrice - player.moneyOnTable
+                        player.currentMoney -= temp
+                        player.moneyOnTable += temp
                     else:
                         try:
                             price = int(kwota)
                             if price > player.currentMoney or price < 1:
-                                raise ValueError('Niepoprawna wartość kwoty licytacji')
+                                raise ValueError('Niepoprawna kwota licytacji')
                             if price < highestPrice - player.moneyOnTable:
                                 player.currentAlive = 'OOTR'
                                 price = 0
@@ -52,8 +54,8 @@ class SecondAuction:
                                 highestPrice = price+player.moneyOnTable
                                 player.currentMoney -= price
                                 player.moneyOnTable += price
-                        except:
-                            raise TypeError('Nie została prawidłowo podana kwota licytacji')
+                        except Exception:
+                            raise TypeError('Nieprawidłowo podana kwota licytacji')
         isFirstTime = False
 
         for i in range(1, len(players)):

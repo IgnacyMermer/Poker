@@ -7,7 +7,8 @@ from Listeners import *
 
 class Clock:
     """
-    Class to generate clock events until application is running, it allows to check other events like keyboard events and it helps with 
+    Class to generate clock events until application is running, it allows to
+    check other events like keyboard events and it helps with
     refreshing the screen.
     """
 

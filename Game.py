@@ -11,7 +11,8 @@ from Auction1 import FirstAuction
 
 class Game:
     """
-    This class is responsible for managing the entire game. It contains 7 states which tells program, in which moment of the game we are. 
+    This class is responsible for managing the entire game. It contains 7 
+    states which tells program, in which moment of the game we are. 
     """
 
     STATE_START = 'start'
@@ -22,12 +23,13 @@ class Game:
     STATE_RIVER = 'river'
     STATE_SHOWDOWN = 'showdown'
 
-
     def __init__(self, eventManager):
         """
         gameCards - it stores information about all cards in the cards pot
-        eventManager is to add class' listener to it. It allows to call refresh funtion on every clock tick and check events and game states, 
-        call another function on every moment of the game. In initial state it set game state on STATE_START, it call start function.
+        eventManager is to add class' listener to it. It allows to call
+        refresh funtion on every clock tick and check events and game states,
+        call another function on every moment of the game. In initial state it
+        set game state on STATE_START, it call start function.
         """
 
         self.gameCards = GameCards()
@@ -41,7 +43,6 @@ class Game:
         self.state = Game.STATE_START
         self.moneyText = ""
         self.isFirstTime = True
-
 
     def refresh(self, event):
         if isinstance(event, GameStartEvent):
@@ -93,18 +94,17 @@ class Game:
         self.gameCards.initializeCards()
         self.gameCards.mixCards()
 
-    
     def initializePlayers(self):
         self.players = []
         self.players.append(Player(self.myName, 0, 0))
-        nameList=['Zdzichu', 'Zbychu', 'Damcio', 'Pawcio']
+        nameList = ['Zdzichu', 'Zbychu', 'Damcio', 'Pawcio']
         for i in range(1, self.playersCount):
             self.players.append(Player(nameList[i], i, 2))
 
-
     def dealPreflop(self):
         """
-        In this moment of game, players get two first cards and then they start auction
+        In this moment of game, players get two first cards and 
+        then they start auction
         """
 
         self.state = Game.STATE_PREFLOP
@@ -114,14 +114,18 @@ class Game:
             self.players[i%playerCount].addCards(self.gameCards.popCard())
 
         self.eventManager.addEventToQueue(PreFlopEvent(self.players))
-    
+
     def dealFlop(self):
 
         """
-        Here is call function (firstMoney) responds for handling first auction in round, then computer shows 3 community cards.
+        Here is call function (firstMoney) responds for handling first auction
+        in round, then computer shows 3 community cards.
         """
 
-        returnValues = FirstAuction.firstMoney(self.isFirstTime, self.highestMoney, self.players, self.communityCards, self.moneyText)
+        returnValues = FirstAuction.firstMoney(self.isFirstTime,
+                                               self.highestMoney, self.players,
+                                               self.communityCards,
+                                               self.moneyText)
         self.isFirstTime = returnValues[1]
         self.highestMoney = returnValues[0]
         self.players = returnValues[2]
@@ -130,7 +134,8 @@ class Game:
             tempBool = True
             self.eventManager.addEventToQueue(ClearMoneyEvent())
             for i in range(len(self.players)):
-                if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
+                if self.players[i].moneyOnTable != self.highestMoney and \
+                   self.players[i].currentAlive != 'OOTR':
                     tempBool = False
             if tempBool:
                 self.state = Game.STATE_FLOP
@@ -145,28 +150,37 @@ class Game:
         else:
             self.state = Game.STATE_RIVER
             playerAlive = self.getWinner()
-            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
+            self.eventManager.addEventToQueue(ShowDownEvent(self.players,
+                                                            playerAlive,
+                                                            self.communityCards,
+                                                            playerAlive.cards))
 
-    
     def dealTurn(self):
         """
-        In this void we check if all players equal their moneyOnTable to highestMoney or they are out of the round. Before this checking
-        we call void secondMoney in which we handle second auction in game. After auction we go to Turn state and update players' money display 
-        on the screen and show one more community card. If the game is over in this state we go to River state and show cards of the winner. 
+        In this void we check if all players equal their moneyOnTable to
+        highestMoney or they are out of the round. Before this checking
+        we call void secondMoney in which we handle second auction in game.
+        After auction we go to Turn state and update players' money display
+        on the screen and show one more community card. If the game is over in
+        this state we go to River state and show cards of the winner.
         """
 
-        returnValues = SecondAuction.secondMoney(self.isFirstTime, self.highestMoney, self.players, self.communityCards, self.moneyText)
+        returnValues = SecondAuction.secondMoney(self.isFirstTime,
+                                                 self.highestMoney,
+                                                 self.players,
+                                                 self.communityCards,
+                                                 self.moneyText)
         self.isFirstTime = returnValues[1]
         self.highestMoney = returnValues[0]
         self.players = returnValues[2]
 
-
         if not self.checkIfEnd():
             self.eventManager.addEventToQueue(ClearMoneyEvent())
-            
+
             tempBool = True
             for i in range(len(self.players)):
-                if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
+                if self.players[i].moneyOnTable != self.highestMoney and \
+                   self.players[i].currentAlive != 'OOTR':
                     tempBool = False
             if tempBool:
                 for player in self.players:
@@ -176,35 +190,46 @@ class Game:
                 self.communityCards.append(tempCards)
 
                 self.isFirstTime = True
-                self.eventManager.addEventToQueue(TurnEvent(tempCards, self.players))
+                self.eventManager.addEventToQueue(TurnEvent(tempCards, 
+                                                            self.players))
             else:
                 self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
                         str(self.highestMoney)))
         else:
             self.state = Game.STATE_RIVER
             playerAlive = self.getWinner()
-            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
+            self.eventManager.addEventToQueue(ShowDownEvent(self.players,
+                                                            playerAlive,
+                                                            self.communityCards,
+                                                            playerAlive.cards))
 
 
     def dealRiver(self):
         """
-        We do the same things as in dealFlop and dealTurn functions. We go to function thirdMoney and handle third auction until 
-        all players put the same money as the highest or they resign of the round.
+        We do the same things as in dealFlop and dealTurn functions. We go to
+        function thirdMoney and handle third auction until
+        all players put the same money as the highest or they resign of the
+        round.
         """
 
-        returnValues = ThirdAuction.thirdMoney(self.isFirstTime, self.highestMoney, self.players, self.communityCards, self.moneyText)
+        returnValues = ThirdAuction.thirdMoney(self.isFirstTime,
+                                               self.highestMoney,
+                                               self.players,
+                                               self.communityCards,
+                                               self.moneyText)
         self.isFirstTime = returnValues[1]
         self.highestMoney = returnValues[0]
         self.players = returnValues[2]
-        
+
         if not self.checkIfEnd():
 
             self.eventManager.addEventToQueue(ClearMoneyEvent())
-            
+
             tempBool = True
-            
+
             for i in range(len(self.players)):
-                if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
+                if self.players[i].moneyOnTable != self.highestMoney and \
+                   self.players[i].currentAlive != 'OOTR':
                     tempBool = False
             if tempBool:
                 for player in self.players:
@@ -223,7 +248,6 @@ class Game:
             playerAlive = self.getWinner()
             self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
 
-    
     def checkIfEnd(self):
         """
         This function check if in the round is more than one player still playing, if not it return True means that game is over
