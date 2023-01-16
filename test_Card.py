@@ -1,5 +1,5 @@
-from Card import *
-from Player import *
+from Card import PokerHandler, Card
+from Player import Player
 import pytest
 
 
@@ -9,6 +9,7 @@ def test_sortedCards():
     card2 = Card('serce', 11)
     card3 = Card('serce', 9)
     assert PokerHandler.GetBestChoise([card1, card2, card3]) == [card3, card1, card2]
+
 
 def test_royalPoker():
     """For seven cards"""
@@ -69,11 +70,11 @@ def test_getTwoCardResult():
     assert PokerHandler.getTwoCardResult([Card('serce', 5), Card('serce', 2)]).resultName == 'High_Card'
 
     with pytest.raises(ValueError):
-        PokerHandler.getTwoCardResult([Card('serce',2)])
+        PokerHandler.getTwoCardResult([Card('serce', 2)])
     with pytest.raises(ValueError):
-        PokerHandler.getTwoCardResult([Card('serce',2), Card('serce',2), Card('serce',2)])
+        PokerHandler.getTwoCardResult([Card('serce', 2), Card('serce', 2), Card('serce', 2)])
     with pytest.raises(ValueError):
-        PokerHandler.getTwoCardResult([Card('serce',2), Card('serce',2), Card('serce',2), Card('serce',2)])
+        PokerHandler.getTwoCardResult([Card('serce', 2), Card('serce', 2), Card('serce', 2), Card('serce', 2)])
 
 
 def test_creatingPlayer():

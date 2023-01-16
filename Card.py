@@ -56,7 +56,8 @@ class Result:
 
 class PokerHandler:
     """
-    Below are 7 seven state which describes and tells the app in which moment of the game the app is
+    Below are 7 seven state which describes and tells the app in which moment
+    of the game the app is
     """
 
     ROYAL_POKER = ['Royal_Poker', 10000]
@@ -78,7 +79,8 @@ class PokerHandler:
     @staticmethod
     def compareTwoPlayerCards(player1, player2):
         """
-        This function takes two players as parameters and return 1 if first player result of the round is higher, returns -1 if 
+        This function takes two players as parameters and return 1 if first
+        player result of the round is higher, returns -1 if 
         second player has higher result and 0 if there is a draw between them.
         """
 
@@ -102,7 +104,8 @@ class PokerHandler:
     @staticmethod
     def getBestCards(cards):
         """
-        This function check how many cards the program passed as the parameter and then void returnResult function for every 5 cards 
+        This function check how many cards the program passed as the parameter
+        and then void returnResult function for every 5 cards 
         in passed cards. Then function returns the best result
         """
 
@@ -267,7 +270,7 @@ class PokerHandler:
     @staticmethod
     def getTwoCardResult(cards):
         """
-        This function checks if two cards passed as the parameter are pair or 
+        This function checks if two cards passed as the parameter are pair or
         two different cards and return result for
         these cards.
         """

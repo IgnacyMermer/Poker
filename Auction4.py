@@ -3,7 +3,8 @@ from Card import *
 
 class FourthAuction:
     @staticmethod
-    def fourthMoney(isFirstTime, highestMoney, players, communityCards, moneyText):
+    def fourthMoney(isFirstTime, highestMoney, players, communityCards, 
+                    moneyText):
         highestPrice = highestMoney
         player1Cards = players[1].cards + communityCards
         player2Cards = []
@@ -28,7 +29,7 @@ class FourthAuction:
                         highestPrice += price
                         player.currentMoney -= price
                         player.moneyOnTable += price
-                except:
+                except Exception:
                     raise TypeError('Nie została prawidłowo podana kwota licytacji')
             else:
                 player = players[0]
@@ -37,8 +38,9 @@ class FourthAuction:
                     if kwota == 'p':
                         player.currentAlive = 'OOTR'
                     elif kwota == 'w':
-                        player.currentMoney -= highestPrice - player.moneyOnTable
-                        player.moneyOnTable += highestPrice - player.moneyOnTable
+                        temp = highestPrice - player.moneyOnTable
+                        player.currentMoney -= temp
+                        player.moneyOnTable += temp
                     else:
                         try:
                             price = int(kwota)
@@ -52,10 +54,10 @@ class FourthAuction:
                                 highestPrice = price+player.moneyOnTable
                                 player.currentMoney -= price
                                 player.moneyOnTable += price
-                        except:
+                        except Exception:
                             raise TypeError('Nie została prawidłowo podana kwota licytacji')
         isFirstTime = False
-        
+
         for i in range(1, len(players)):
             player = players[i]
             if highestPrice - player.moneyOnTable >= player.currentMoney:
@@ -95,7 +97,7 @@ class FourthAuction:
                         player.currentAlive = 'OOTR'
                 elif highestPrice <= 65:
                     if PokerHandler.getBestCards(playersCards[i-1]).score >= 500 and \
-                        highestPrice- player.moneyOnTable < player.currentMoney:
+                       highestPrice- player.moneyOnTable < player.currentMoney:
                         if player.riskLevel > 1 and 74 - player.moneyOnTable < player.currentMoney:
                             highestPrice = 74
                         elif player.riskLevel > 0 and 68 - player.moneyOnTable < player.currentMoney:
@@ -107,10 +109,10 @@ class FourthAuction:
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
                     else:
-                        player.currentAlive = 'OOTR' 
+                        player.currentAlive = 'OOTR'
                 elif highestPrice <= 70:
                     if PokerHandler.getBestCards(playersCards[i-1]).score >= 1500 and \
-                        highestPrice - player.moneyOnTable <= player.currentMoney:
+                       highestPrice - player.moneyOnTable <= player.currentMoney:
                         if 77 - player.moneyOnTable < player.currentMoney:
                             highestPrice = 77
                         player.currentMoney -= highestPrice - player.moneyOnTable
@@ -133,7 +135,7 @@ class FourthAuction:
                         player.currentAlive = 'OOTR' 
                 elif highestPrice <= 75:
                     if PokerHandler.getBestCards(playersCards[i-1]).score >= 200 and player.riskLevel > 1 and \
-                        highestPrice - player.moneyOnTable < player.currentMoney:
+                       highestPrice - player.moneyOnTable < player.currentMoney:
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
                     elif PokerHandler.getBestCards(playersCards[i-1]).score >= 300 and player.riskLevel > 0 and \
@@ -152,10 +154,10 @@ class FourthAuction:
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
                     else:
-                        player.currentAlive = 'OOTR' 
+                        player.currentAlive = 'OOTR'
                 elif highestPrice <= 80:
                     if PokerHandler.getBestCards(playersCards[i-1]).score > 300 and player.riskLevel > 1 and \
-                        highestPrice - player.moneyOnTable < player.currentMoney:
+                       highestPrice - player.moneyOnTable < player.currentMoney:
                         player.currentMoney -= highestPrice - player.moneyOnTable
                         player.moneyOnTable += highestPrice - player.moneyOnTable
                     elif PokerHandler.getBestCards(playersCards[i-1]).score >= 1000 and player.riskLevel > 0 and \

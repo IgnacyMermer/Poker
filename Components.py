@@ -24,7 +24,7 @@ class TextInputBox(pygame.sprite.Sprite):
         super().__init__()
         self.color = (255, 255, 255)
         self.backcolor = None
-        self.pos = (x, y) 
+        self.pos = (x, y)
         self.width = width
         self.font = pygame.font.SysFont(None, 100)
         self.text = ""
@@ -40,7 +40,7 @@ class TextInputBox(pygame.sprite.Sprite):
         self.image.blit(fontText, (5, 5))
         pygame.draw.rect(self.image, self.color, self.image.get_rect()
                          .inflate(-2, -2), 2)
-        self.rect = self.image.get_rect(topleft = self.pos)
+        self.rect = self.image.get_rect(topleft=self.pos)
 
     def update(self, event_list):
         for event in event_list:
@@ -53,4 +53,3 @@ class TextInputBox(pygame.sprite.Sprite):
 
     def getText(self):
         return self.text
-    

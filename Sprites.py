@@ -1,12 +1,13 @@
 from pygame import *
 import pygame
 from Events import *
-from Components import *
+
 
 class TextSprite(pygame.sprite.Sprite):
 
     """
-    This class is using Sprite, pygame sublibraly. It allows to display text on the screen and changing its color, position, text and size.
+    This class is using Sprite, pygame sublibraly. It allows to display text
+    on the screen and changing its color, position, text and size.
     The function writeSomething is rendering with pygame the changes.
     """
 
@@ -29,7 +30,6 @@ class TextSprite(pygame.sprite.Sprite):
         self.prev_font_size = self.fontsize
         self.dest_font_size = 60
 
-
     def writeSomething(self, msg=""):
         myfont = pygame.font.SysFont("None", self.fontsize)
         mytext = myfont.render(msg, True, self.fontcolor)
@@ -47,13 +47,16 @@ class TextSprite(pygame.sprite.Sprite):
 class CardSprite(pygame.sprite.Sprite):
 
     """
-    This class is using Sprite, pygame sublibraly. It allows to display card on the screen and changing its position and card image.
-    Functions update, getDelX, getDelY allows also for changing position of the card on the screen in slow motion which makes a
-    pretty animation. Funtion getCardImageName allows to take the name of the file in images folder and download this image with pygame
-    and then display as the card. 
+    This class is using Sprite, pygame sublibraly. It allows to display card
+    on the screen and changing its position and card image.
+    Functions update, getDelX, getDelY allows also for changing position of
+    the card on the screen in slow motion which makes a
+    pretty animation. Funtion getCardImageName allows to take the name of the
+    file in images folder and download this image with pygame
+    and then display as the card.
     """
 
-    def __init__(self, card, pos1,  pos2, type, image = '', group=None):
+    def __init__(self, card, pos1,  pos2, type, image='', group=None):
         pygame.sprite.Sprite.__init__(self, group)
         if image == '':
             image = pygame.image.load(self.getCardImageName(card))
@@ -72,24 +75,24 @@ class CardSprite(pygame.sprite.Sprite):
     def update(self, seconds):
         PLAYER_CARD = 'playerCard'
         COMMUNITY_CARD = 'communityCard'
-        if(self.type == PLAYER_CARD or self.type == COMMUNITY_CARD):
+        if self.type == PLAYER_CARD or self.type == COMMUNITY_CARD:
             if self.pos2[0] - self.pos1[0] < 0 \
-                and self.pos2[0] <= self.pos[0]:
+               and self.pos2[0] <= self.pos[0]:
                 self.pos[0] += self.getDelX(0.6, seconds)
                 if self.pos[0] <= self.pos2[0]:
                     self.pos[0] = self.pos2[0]
             if self.pos2[0] - self.pos1[0] >= 0 \
-                and self.pos2[0] >= self.pos[0]:
+               and self.pos2[0] >= self.pos[0]:
                 self.pos[0] += self.getDelX(0.6, seconds)
                 if self.pos[0] >= self.pos2[0]:
                     self.pos[0] = self.pos2[0]
             if self.pos2[1] - self.pos1[1] < 0 \
-                and self.pos2[1] <= self.pos[1]:
+               and self.pos2[1] <= self.pos[1]:
                 self.pos[1] += self.getDelY(0.6, seconds)
                 if self.pos[1] <= self.pos2[1]:
                     self.pos[1] = self.pos2[1]
             if self.pos2[1] - self.pos1[1] >= 0 \
-                and self.pos2[1] >= self.pos[1]:
+               and self.pos2[1] >= self.pos[1]:
                 self.pos[1] += self.getDelY(0.6, seconds)
                 if self.pos[1] >= self.pos2[1]:
                     self.pos[1] = self.pos2[1]
@@ -98,10 +101,10 @@ class CardSprite(pygame.sprite.Sprite):
         self.rect.centery = round(self.pos[1], 0)
 
     def getDelX(self, speed, seconds):
-        return (-1.0) *(self.pos1[0] - self.pos2[0]) / seconds / speed
+        return (-1.0) * (self.pos1[0] - self.pos2[0]) / seconds / speed
 
     def getDelY(self, speed, seconds):
-        return (-1.0) *(self.pos1[1] - self.pos2[1]) / seconds / speed
+        return (-1.0) * (self.pos1[1] - self.pos2[1]) / seconds / speed
 
     def getCardImageName(self, card):
             color = card.getColor()
@@ -133,10 +136,12 @@ class CardSprite(pygame.sprite.Sprite):
             tempStr = f'images/{rankStr}_{colorStr}.png'
             return tempStr
 
+
 class TableSprite(pygame.sprite.Sprite):
 
     """
-    This class is using Sprite, pygame sublibraly. It allows to set the background to default.
+    This class is using Sprite, pygame sublibraly.
+    It allows to set the background to default.
     """
 
     def __init__(self, group=None):

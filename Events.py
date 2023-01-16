@@ -41,7 +41,7 @@ class FlopEvent(Event):
 class TurnEvent(Event):
     def __init__(self, card, playersList):
         self.name = "Turn Event"
-        self.card= card
+        self.card = card
         self.playersList = playersList
 
 
@@ -62,13 +62,13 @@ class ShowDownEvent(Event):
 
 
 class MoneyTextEvent(Event):
-    def __init__(self, text, maxPrice = 0):
+    def __init__(self, text, maxPrice=0):
         self.name = "Money Text event"
         self.text = text
 
 
 class MoneyToEquals(Event):
-    def __init__(self, text, maxPrice = 0):
+    def __init__(self, text, maxPrice=0):
         self.name = "Money To Equals event"
         self.maxPrice = maxPrice
         self.text = text

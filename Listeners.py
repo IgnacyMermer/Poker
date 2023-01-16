@@ -1,11 +1,13 @@
-from Events import *
+from Events import ClearMoneyEvent, MoneyTextEvent, GameStartEvent, \
+                   NextMoveEvent, ClockEvent, QuitEvent
 import pygame
 
 
 class EventListener:
 
     """
-    This class is to handle all new listeners and events, it allows to add new event which is handle in every listener, it means in every class 
+    This class is to handle all new listeners and events, it allows to add new
+    event which is handle in every listener, it means in every class
     which have a refresh function and in init function add itself to listeners.
     """
 
@@ -27,7 +29,7 @@ class EventListener:
 
     def removeListener(self, listener):
         self.oldListeners.append(listener)
-    
+
     def voidEvents(self):
         for event in self.events:
             for listener in self.listeners:
@@ -35,10 +37,11 @@ class EventListener:
             if self.newListeners:
                 self.refreshListeners()
         self.events = []
-    
+
     def addEventToQueue(self, event):
         """
-        This function allows to add new event to queue, refresh listeners and void refresh function in every listener
+        This function allows to add new event to queue, refresh listeners and 
+        void refresh function in every listener
         """
 
         self.events.append(event)
@@ -46,10 +49,12 @@ class EventListener:
             self.refreshListeners()
             self.voidEvents()
 
+
 class KeyboardController:
 
     """
-    This class is to handle all events on user keyboard, if user click any button on the keyboard, with next clock event this key event is 
+    This class is to handle all events on user keyboard, if user click any
+    button on the keyboard, with next clock event this key event is
     handle and right event is called
     """
 

@@ -1,8 +1,7 @@
-from PyGameView import *
-from Events import *
-from Sprites import *
-from Game import *
-from Listeners import *
+from PyGameView import PygameView
+from Events import ClockEvent, QuitEvent
+from Game import Game
+from Listeners import EventListener, KeyboardController
 
 
 class Clock:

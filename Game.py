@@ -1,8 +1,11 @@
-from Card import *
+from Card import GameCards
 from Components import *
 from Sprites import *
-from Player import *
+from Player import Player
 from random import randint
+from Events import MoneyTextEvent, GameStartEvent, MoneyToEquals,\
+                   NextMoveEvent, ClearMoneyEvent, PreFlopEvent, FlopEvent,\
+                   TurnEvent, RiverEvent, ShowDownEvent
 from Auction4 import FourthAuction
 from Auction3 import ThirdAuction
 from Auction2 import SecondAuction
@@ -79,7 +82,7 @@ class Game:
         self.initializeRound()
         self.eventManager.addEventToQueue(ClearMoneyEvent())
         self.eventManager.addEventToQueue(MoneyTextEvent(""))
-    
+
     def startNextRound(self):
         self.initializeRound()
         self.eventManager.addEventToQueue(ClearMoneyEvent())
@@ -111,7 +114,7 @@ class Game:
         playerCount = len(self.players)
 
         for i in range(playerCount * 2):
-            self.players[i%playerCount].addCards(self.gameCards.popCard())
+            self.players[i % playerCount].addCards(self.gameCards.popCard())
 
         self.eventManager.addEventToQueue(PreFlopEvent(self.players))
 
@@ -141,9 +144,11 @@ class Game:
                 self.state = Game.STATE_FLOP
                 for i in range(3):
                     self.communityCards.append(self.gameCards.popCard())
-                
+
                 self.isFirstTime = True
-                self.eventManager.addEventToQueue(FlopEvent(self.communityCards, self.players))
+                self.eventManager.addEventToQueue(FlopEvent(
+                                                        self.communityCards,
+                                                        self.players))
             else:
                 self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
                         str(self.highestMoney)))
@@ -203,7 +208,6 @@ class Game:
                                                             self.communityCards,
                                                             playerAlive.cards))
 
-
     def dealRiver(self):
         """
         We do the same things as in dealFlop and dealTurn functions. We go to
@@ -239,18 +243,23 @@ class Game:
                 self.communityCards.append(tempCards)
 
                 self.isFirstTime = True
-                self.eventManager.addEventToQueue(RiverEvent(tempCards, self.players))
+                self.eventManager.addEventToQueue(RiverEvent(tempCards,
+                                                             self.players))
             else:
                 self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
                         str(self.highestMoney)))
         else:
             self.state = Game.STATE_RIVER
             playerAlive = self.getWinner()
-            self.eventManager.addEventToQueue(ShowDownEvent(self.players, playerAlive, self.communityCards, playerAlive.cards))
+            self.eventManager.addEventToQueue(ShowDownEvent(self.players,
+                                                            playerAlive,
+                                                            self.communityCards,
+                                                            playerAlive.cards))
 
     def checkIfEnd(self):
         """
-        This function check if in the round is more than one player still playing, if not it return True means that game is over
+        This function check if in the round is more than one player still
+        playing, if not it return True means that game is over
         """
 
         countAlive = 0
@@ -260,14 +269,20 @@ class Game:
         if countAlive > 1:
             return False
         return True
-    
+
     def showDown(self):
         """
-        This function changes state to State Showdown and call showDown event to show winner's cards on the screen. Before that it calls 
-        function choiceBestCards which choose the best 5 cards from 7 and assign the result of the round to every player which is still alive
+        This function changes state to State Showdown and call showDown event
+        to show winner's cards on the screen. Before that it calls
+        function choiceBestCards which choose the best 5 cards from 7 and
+        assign the result of the round to every player which is still alive
         """
 
-        returnValues = FourthAuction.fourthMoney(self.isFirstTime, self.highestMoney, self.players, self.communityCards, self.moneyText)
+        returnValues = FourthAuction.fourthMoney(self.isFirstTime,
+                                                 self.highestMoney,
+                                                 self.players,
+                                                 self.communityCards,
+                                                 self.moneyText)
         self.isFirstTime = returnValues[1]
         self.highestMoney = returnValues[0]
         self.players = returnValues[2]
@@ -275,48 +290,58 @@ class Game:
         if not self.checkIfEnd():
 
             self.eventManager.addEventToQueue(ClearMoneyEvent())
-            
+
             tempBool = True
 
             for i in range(len(self.players)):
-                if self.players[i].moneyOnTable != self.highestMoney and self.players[i].currentAlive != 'OOTR':
+                if self.players[i].moneyOnTable != self.highestMoney and \
+                   self.players[i].currentAlive != 'OOTR':
                     tempBool = False
             if tempBool:
                 self.state = Game.STATE_SHOWDOWN
-        
+
                 for player in self.players:
                     player.choiceBestCards(self.communityCards)
-                
-                if self.players[0].currentAlive != 'Alive' or self.players[0].moneyOnTable != 0:
+
+                if self.players[0].currentAlive != 'Alive' or \
+                   self.players[0].moneyOnTable != 0:
                     winner = self.getWinner()
-                    self.eventManager.addEventToQueue(ShowDownEvent(self.players, winner, self.communityCards, winner.cards))
+                    self.eventManager.addEventToQueue(ShowDownEvent(
+                                                        self.players, winner,
+                                                        self.communityCards,
+                                                        winner.cards))
             else:
                 self.eventManager.addEventToQueue(MoneyToEquals(f'Podaj kwote ktora chcesz polozyc na stol ({self.highestMoney-self.players[0].moneyOnTable}$ - {50-self.players[0].moneyOnTable}$) albo wyrownaj(w) albo pas(p)',
                         str(self.highestMoney)))
         else:
             self.state = Game.STATE_SHOWDOWN
-        
+
             for player in self.players:
                 player.choiceBestCards(self.communityCards)
-            
-            if self.players[0].currentAlive != 'Alive' or self.players[0].moneyOnTable != 0:
-                winner = self.getWinner()
-                self.eventManager.addEventToQueue(ShowDownEvent(self.players, winner, self.communityCards, winner.cards))
 
+            if self.players[0].currentAlive != 'Alive' or \
+               self.players[0].moneyOnTable != 0:
+                winner = self.getWinner()
+                self.eventManager.addEventToQueue(ShowDownEvent(self.players,
+                                                                winner,
+                                                                self.communityCards,
+                                                                winner.cards))
 
     def getWinner(self):
         """
-        This function compare all players results and choose the best player in the round. It restarts all player's values to start next round if
-        user will want it.  
+        This function compare all players results and choose the best player
+        in the round. It restarts all player's values to start next round if
+        user will want it.
         """
-        
+
         bestScore = 0
         bestPlayer = None
         allMoneyOnTable = 0
-        
+
         for player in self.players:
             if player.roundResult is not None:
-                if player.roundResult.score > bestScore and player.currentAlive == 'Alive':
+                if player.roundResult.score > bestScore and \
+                   player.currentAlive == 'Alive':
                     bestScore = player.roundResult.score
                     bestPlayer = player
             else:
@@ -330,8 +355,9 @@ class Game:
                         bestPlayer = player
         if bestPlayer is None:
             bestPlayer = self.players[randint(0, len(self.players))]
-        
-        copiedBestPlayer = Player(bestPlayer.name, bestPlayer.position, bestPlayer.riskLevel)
+
+        copiedBestPlayer = Player(bestPlayer.name, bestPlayer.position,
+                                  bestPlayer.riskLevel)
         copiedBestPlayer.cards = bestPlayer.cards
         copiedBestPlayer.roundResult = bestPlayer.roundResult
         copiedBestPlayer.moneyOnTable = bestPlayer.moneyOnTable
@@ -347,5 +373,5 @@ class Game:
         for player in self.players:
             if player.position == bestPlayer.position:
                 player.currentMoney += allMoneyOnTable
-        #bestPlayer.currentMoney += allMoneyOnTable
+        # bestPlayer.currentMoney += allMoneyOnTable
         return copiedBestPlayer
