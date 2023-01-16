@@ -204,6 +204,8 @@ class PygameView:
             self.showRiverCard(event.card, event.playersList)
 
         if isinstance(event, ShowDownEvent):
+            print(event.cardList)
+            print('----')
             self.showDownResult(event.players, event.player, event.communityCards, event.cardList)
 
     def showPreFlopCards(self, players):
@@ -387,16 +389,17 @@ class PygameView:
             cardSprite.kill()
 
         i = 0
+        print(cardsList)
         for card in communityCards:
             i += 1
-            CardSprite(card, Card.CARDS_POSITION, (350 + i * 100, 200), Card.COMMUNITY_CARD, '', self.communitySprites)
+            CardSprite(card, Card.CARDS_POSITION, (350 + i * 100, 380), Card.COMMUNITY_CARD, '', self.communitySprites)
 
         i = 0
         for card in cardsList:
             i += 1
-            CardSprite(card, Card.CARDS_POSITION, (350 + i * 100, 450), Card.COMMUNITY_CARD, '', self.communitySprites)
+            CardSprite(card, Card.CARDS_POSITION, (350 + i * 100, 640), Card.COMMUNITY_CARD, '', self.communitySprites)
 
-        TextSprite("Gre wygrywa " + player.name, (550, 300), 60, (200, 30, 10), self.communitySprites)
-        TextSprite("Nacisnij strzalke w prawo aby rozpoczac nowa runde", (550, 400), 60, (150, 150, 150), self.communitySprites)
+        TextSprite("Gre wygrywa " + player.name, (550, 150), 60, (200, 30, 10), self.communitySprites)
+        TextSprite("Nacisnij strzalke w prawo aby rozpoczac nowa runde", (550, 200), 60, (150, 150, 150), self.communitySprites)
         if player.roundResult is not None:
-            TextSprite("\""+player.roundResult.resultName+"\"", (550, 360), 50, (200, 40, 200), self.communitySprites)
+            TextSprite("\""+player.roundResult.resultName+"\"", (550, 260), 50, (200, 40, 200), self.communitySprites)

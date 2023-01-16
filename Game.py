@@ -6,6 +6,7 @@ from random import randint
 from Auction4 import FourthAuction
 from Auction3 import ThirdAuction
 from Auction2 import SecondAuction
+from Auction1 import FirstAuction
 
 
 class Game:
@@ -44,6 +45,8 @@ class Game:
 
     def refresh(self, event):
         if isinstance(event, GameStartEvent):
+            if self.myName == "":
+                self.myName = "Default name"
             if event.playersCount != -1:
                 self.playersCount = 1 + event.playersCount
                 if self.state == Game.STATE_START:
@@ -66,9 +69,7 @@ class Game:
                 self.showDown()
         if isinstance(event, MoneyTextEvent):
             if self.state == Game.STATE_START:
-                self.myName = event.text
-                if self.myName == "":
-                    self.myName = "Default name"
+                self.myName = event.text                
             else:
                 self.moneyText = event.text
 
@@ -119,7 +120,12 @@ class Game:
         """
         Here is call function (firstMoney) responds for handling first auction in round, then computer shows 3 community cards.
         """
-        self.firstMoney()
+
+        returnValues = FirstAuction.firstMoney(self.isFirstTime, self.highestMoney, self.players, self.communityCards, self.moneyText)
+        self.isFirstTime = returnValues[1]
+        self.highestMoney = returnValues[0]
+        self.players = returnValues[2]
+
         if not self.checkIfEnd():
             tempBool = True
             self.eventManager.addEventToQueue(ClearMoneyEvent())
@@ -300,6 +306,14 @@ class Game:
                         bestPlayer = player
         if bestPlayer is None:
             bestPlayer = self.players[randint(0, len(self.players))]
+        
+        copiedBestPlayer = Player(bestPlayer.name, bestPlayer.position, bestPlayer.riskLevel)
+        copiedBestPlayer.cards = bestPlayer.cards
+        copiedBestPlayer.roundResult = bestPlayer.roundResult
+        copiedBestPlayer.moneyOnTable = bestPlayer.moneyOnTable
+        copiedBestPlayer.currentMoney = bestPlayer.currentMoney
+        copiedBestPlayer.currentAlive = bestPlayer.currentAlive
+
         for player in self.players:
             allMoneyOnTable += player.moneyOnTable
             player.moneyOnTable = 0
@@ -310,95 +324,4 @@ class Game:
             if player.position == bestPlayer.position:
                 player.currentMoney += allMoneyOnTable
         #bestPlayer.currentMoney += allMoneyOnTable
-        return bestPlayer
-
-
-    def firstMoney(self):
-        """
-        This is void handling first auction, it gets input from user or allows to resign for that round if user writes p in input, 
-        It takes user's price and check for every computer player if it should resign or take the same bid or put more money. 
-        It decide it based on player's cards and risk level of the player.
-        """
-        
-        highestPrice = self.highestMoney
-        price = 0
-        if self.isFirstTime:
-            player = self.players[0]
-            kwota = self.moneyText
-            self.moneyText = ""
-            try:
-                if kwota == 'p':
-                    player.currentAlive = 'OOTR'
-                else:
-                    price = int(kwota)
-                    if price > player.currentMoney/2 or price < 1:
-                        raise ValueError('Niepoprawna wartość kwoty licytacji')
-                    highestPrice = price
-                    player.currentMoney -= price
-                    player.moneyOnTable += price
-            except:
-                raise TypeError('Nie została prawidłowo podana kwota licytacji')
-        else:
-            player = self.players[0]
-            if player.moneyOnTable < highestPrice:
-                kwota = self.moneyText
-                if kwota == 'p':
-                    player.currentAlive = 'OOTR'
-                elif kwota == 'w':
-                    player.currentMoney -= highestPrice - player.moneyOnTable
-                    player.moneyOnTable += highestPrice - player.moneyOnTable
-                else:
-                    try:
-                        price = int(kwota)
-                        if price > player.currentMoney/2 or price < 1:
-                            raise ValueError('Niepoprawna wartość kwoty licytacji')
-                        if price < highestPrice - player.moneyOnTable:
-                            player.currentAlive = 'OOTR'
-                            price = 0
-                            print('Za mala kwota aby wyrownac lub podbic')
-                        highestPrice = price + player.moneyOnTable
-                        player.currentMoney -= price
-                        player.moneyOnTable += price
-                    except:
-                        raise TypeError('Nie została prawidłowo podana kwota licytacji')
-        self.isFirstTime = False
-
-        for i in range(1, len(self.players)):
-            player = self.players[i]
-            if highestPrice - player.moneyOnTable >= player.currentMoney:
-                player.currentAlive = 'OOTR'
-            elif player.currentAlive == 'Alive' and (highestPrice > player.moneyOnTable or self.players[0].currentAlive == 'OOTR'):
-                if highestPrice >= 0 and highestPrice < 20:
-                    if PokerHandler.getTwoCardResult(self.players[1].cards).score >= 100 and \
-                    self.players[1].riskLevel > 1 and 35 - player.moneyOnTable < player.currentMoney:
-                            highestPrice = 35
-                    elif PokerHandler.getTwoCardResult(self.players[1].cards).score > 18 and \
-                    self.players[1].riskLevel > 1 and 25 - player.moneyOnTable < player.currentMoney:
-                            highestPrice = 25
-                    elif PokerHandler.getTwoCardResult(self.players[1].cards).score > 30 and \
-                    self.players[1].riskLevel > 0 and 25 - player.moneyOnTable < player.currentMoney:
-                            highestPrice = 25
-                    elif PokerHandler.getTwoCardResult(self.players[1].cards).score > 18 and \
-                    self.players[1].riskLevel > 0 and 22 - player.moneyOnTable < player.currentMoney:
-                            highestPrice = 22
-                    player.currentMoney -= highestPrice - player.moneyOnTable
-                    player.moneyOnTable += highestPrice - player.moneyOnTable
-                elif highestPrice >= 20 and highestPrice <= 40:
-                    if PokerHandler.getTwoCardResult(self.players[1].cards).score >= 100 and \
-                    self.players[1].riskLevel > 1 and 35 - player.moneyOnTable < player.currentMoney:
-                            highestPrice = 35 if 35 > highestPrice else highestPrice
-                            player.currentMoney -= highestPrice - player.moneyOnTable
-                            player.moneyOnTable += highestPrice - player.moneyOnTable
-                    elif PokerHandler.getTwoCardResult(player.cards).score > 18:
-                        player.currentMoney -= highestPrice - player.moneyOnTable
-                        player.moneyOnTable += highestPrice - player.moneyOnTable
-                    else:
-                        player.currentAlive = 'OOTR' 
-                else:
-                    if PokerHandler.getTwoCardResult(player.cards).score >= 100:
-                        player.currentMoney -= highestPrice - player.moneyOnTable
-                        player.moneyOnTable += highestPrice - player.moneyOnTable
-                    else:
-                        player.currentAlive = 'OOTR'
-        
-        self.highestMoney = highestPrice
+        return copiedBestPlayer
