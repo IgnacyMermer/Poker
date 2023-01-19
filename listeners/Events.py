@@ -5,9 +5,10 @@ class Event:
 
 
 class GameStartEvent(Event):
-    def __init__(self, playersCount):
+    def __init__(self, playersCount, level=1):
         self.name = "The game started"
         self.playersCount = playersCount
+        self.level = level
 
 
 class ClockEvent(Event):

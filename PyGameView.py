@@ -1,10 +1,10 @@
 import pygame
 from pygame import *
-from Components import Button
-from Events import MoneyTextEvent, GameStartEvent, MoneyToEquals,\
+from components.Components import Button
+from listeners.Events import MoneyTextEvent, GameStartEvent, MoneyToEquals,\
                    NextMoveEvent, ClockEvent, PreFlopEvent, FlopEvent,\
                    TurnEvent, RiverEvent, ShowDownEvent
-from Sprites import TextSprite, CardSprite, TableSprite
+from components.Sprites import TextSprite, CardSprite, TableSprite
 from Card import Card
 
 
@@ -34,20 +34,32 @@ class PygameView:
 
         self.window.blit(textSurf, ((1400 - textSurf.get_width())/2, 150))
 
-        image1 = pygame.image.load('images/btn1przeciwnik.png').convert_alpha()
-        self.rect = image1.get_rect()
+        # image1 = pygame.image.load('images/btn1przeciwnik.png').convert_alpha()
+        # self.rect = image1.get_rect()
 
+        self.button1a = Button('images/btn1przeciwnikLatwy.png', 800, 200,
+                              self.window)
         self.button1 = Button('images/btn1przeciwnik.png', 1400, 200,
                               self.window)
-        self.button2 = Button('images/btn2przeciwnik.png', 1400, 300,
+        self.button1b = Button('images/btn1przeciwnikTrudny.png', 2000, 200,
                               self.window)
-        self.button3 = Button('images/btn3przeciwnik.png', 1400, 400,
+        self.button2a = Button('images/btn2przeciwnikLatwy.png', 800, 350,
+                              self.window)
+        self.button2 = Button('images/btn2przeciwnik.png', 1400, 350,
+                              self.window)
+        self.button2b = Button('images/btn2przeciwnikTrudny.png', 2000, 350,
+                              self.window)
+        self.button3a = Button('images/btn3przeciwnikLatwy.png', 800, 500,
+                              self.window)
+        self.button3 = Button('images/btn3przeciwnik.png', 1400, 500,
+                              self.window)
+        self.button3b = Button('images/btn3przeciwnikTrudny.png', 2000, 500,
                               self.window)
 
         textSurf2 = font.render("Podaj imie", True, (150, 150, 150))
         textSurf2 = textSurf2.convert_alpha()
 
-        self.window.blit(textSurf2, (150, 200))
+        self.window.blit(textSurf2, (150, 100))
 
         font = pygame.font.SysFont(None, 100)
         self.text = ""
@@ -87,16 +99,40 @@ class PygameView:
                     if event.type == pygame.QUIT:
                         self.run = False
 
+            if self.button1a.onClick() and not self.gameStarted:
+                self.eventManager.addEventToQueue(GameStartEvent(1, 1))
+                self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
+            if self.button2a.onClick() and not self.gameStarted:
+                self.eventManager.addEventToQueue(GameStartEvent(2, 1))
+                self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
+            if self.button3a.onClick() and not self.gameStarted:
+                self.eventManager.addEventToQueue(GameStartEvent(3, 1))
+                self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
             if self.button1.onClick() and not self.gameStarted:
-                self.eventManager.addEventToQueue(GameStartEvent(1))
+                self.eventManager.addEventToQueue(GameStartEvent(1, 2))
                 self.gameStarted = True
                 self.eventManager.addEventToQueue(NextMoveEvent())
             if self.button2.onClick() and not self.gameStarted:
-                self.eventManager.addEventToQueue(GameStartEvent(2))
+                self.eventManager.addEventToQueue(GameStartEvent(2, 2))
                 self.gameStarted = True
                 self.eventManager.addEventToQueue(NextMoveEvent())
             if self.button3.onClick() and not self.gameStarted:
-                self.eventManager.addEventToQueue(GameStartEvent(3))
+                self.eventManager.addEventToQueue(GameStartEvent(3, 2))
+                self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
+            if self.button1b.onClick() and not self.gameStarted:
+                self.eventManager.addEventToQueue(GameStartEvent(1, 3))
+                self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
+            if self.button2b.onClick() and not self.gameStarted:
+                self.eventManager.addEventToQueue(GameStartEvent(2, 3))
+                self.gameStarted = True
+                self.eventManager.addEventToQueue(NextMoveEvent())
+            if self.button3b.onClick() and not self.gameStarted:
+                self.eventManager.addEventToQueue(GameStartEvent(3, 3))
                 self.gameStarted = True
                 self.eventManager.addEventToQueue(NextMoveEvent())
 

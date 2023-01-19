@@ -1,7 +1,7 @@
 from PyGameView import PygameView
-from Events import ClockEvent, QuitEvent
+from listeners.Events import ClockEvent, QuitEvent
 from Game import Game
-from Listeners import EventListener, KeyboardController
+from listeners.Listeners import EventListener, KeyboardController
 
 
 class Clock:

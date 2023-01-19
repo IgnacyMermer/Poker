@@ -1,4 +1,4 @@
-from Events import ClearMoneyEvent, MoneyTextEvent, GameStartEvent, \
+from listeners.Events import ClearMoneyEvent, MoneyTextEvent, GameStartEvent, \
                    NextMoveEvent, ClockEvent, QuitEvent
 import pygame
 

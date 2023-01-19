@@ -1,8 +1,8 @@
 import random
 from pygame import *
-from Events import *
-from Components import *
-from Sprites import *
+from listeners.Events import *
+from components.Components import *
+from components.Sprites import *
 
 
 class Card:

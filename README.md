@@ -24,17 +24,17 @@ pip3 install pygame
 ```sh
 python3 ./main.py
 ```
-Następnie powinno otworzyć się okno gry, na którym użytkownik musi podać swoje imię (jeżeli tego nie zrobi zostanie mu przypisane imię domyślne). Następnie musi wybrać jedną z 3 opcji, z iloma graczami chce grać. Po wybraniu tej opcji generuje się ekran gry i losowane są dwie karty dla każdego gracza.
+Następnie powinno otworzyć się okno gry, na którym użytkownik musi podać swoje imię (jeżeli tego nie zrobi zostanie mu przypisane imię domyślne). Następnie musi wybrać jedną z 9 opcji (ilość przeciwników i poziom ryzyka na jakim będą grać). Po wybraniu tej opcji generuje się ekran gry i losowane są dwie karty dla każdego gracza.
 
 ## Description
 ###### Użytkownik widzi tylko swoje karty. Następnie jest pierwsza runda licytacji, która trwa do momentu aż wszyscy gracze wyrównają swoją stawkę lub zrezygnują z rundy. Użytkownik podaje kwoty które chce dołożyć do swojej stawki poprzez wpisanie tej kwoty na klawiaturze i naciśniecie przycisku Enter. Jeżeli użytkownik chce wyrównać swoją stawkę do najwyższej, może wpisać literę ‘w’ lub kwotę której mu brakuje do najwyższej stawki. Jeżeli użytkownik chce spasować rundę może wpisać literę ‘p’. Tak następują 4 rundy licytacji i po ostatniej pokazywane są karty gracza, który wygrał. Użytkownik może nacisnąć przycisk prawej strzałki na klawiaturze, aby przejść do następnej rundy, w której kwoty zostały zaktualizowane o zyski i straty z poprzednim rozgrywek. 
 
 
 ## Output
-![image.png](./image.png)
-![image-1.png](./image-1.png)
-![image-2.png](./image-2.png)
-![image-3.png](./image-3.png)
+![image.png](./images/image.png)
+![image-1.png](./images/image-1.png)
+![image-2.png](./images/image-2.png)
+![image-3.png](./images/image-3.png)
 
 ` `
 ` `

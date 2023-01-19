@@ -1,6 +1,6 @@
 from pygame import *
 import pygame
-from Events import *
+from listeners.Events import *
 
 
 class TextSprite(pygame.sprite.Sprite):

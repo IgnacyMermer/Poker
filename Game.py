@@ -1,15 +1,15 @@
 from Card import GameCards
-from Components import *
-from Sprites import *
+from components.Components import *
+from components.Sprites import *
 from Player import Player
 from random import randint
-from Events import MoneyTextEvent, GameStartEvent, MoneyToEquals,\
+from listeners.Events import MoneyTextEvent, GameStartEvent, MoneyToEquals,\
                    NextMoveEvent, ClearMoneyEvent, PreFlopEvent, FlopEvent,\
                    TurnEvent, RiverEvent, ShowDownEvent
-from Auction4 import FourthAuction
-from Auction3 import ThirdAuction
-from Auction2 import SecondAuction
-from Auction1 import FirstAuction
+from auctions.Auction4 import FourthAuction
+from auctions.Auction3 import ThirdAuction
+from auctions.Auction2 import SecondAuction
+from auctions.Auction1 import FirstAuction
 
 
 class Game:
@@ -54,7 +54,7 @@ class Game:
             if event.playersCount != -1:
                 self.playersCount = 1 + event.playersCount
                 if self.state == Game.STATE_START:
-                    self.start()
+                    self.start(event.level)
             else:
                 self.state = Game.STATE_START
                 self.isFirstTime = True
@@ -77,8 +77,8 @@ class Game:
             else:
                 self.moneyText = event.text
 
-    def start(self):
-        self.initializePlayers()
+    def start(self, level):
+        self.initializePlayers(level)
         self.initializeRound()
         self.eventManager.addEventToQueue(ClearMoneyEvent())
         self.eventManager.addEventToQueue(MoneyTextEvent(""))
@@ -97,12 +97,21 @@ class Game:
         self.gameCards.initializeCards()
         self.gameCards.mixCards()
 
-    def initializePlayers(self):
+    def initializePlayers(self, level):
         self.players = []
         self.players.append(Player(self.myName, 0, 0))
         nameList = ['Zdzichu', 'Zbychu', 'Damcio', 'Pawcio']
         for i in range(1, self.playersCount):
-            self.players.append(Player(nameList[i], i, 2))
+            playerLevel = 2
+            if level < 3:
+                if level == 2:
+                    playerLevel = 1
+                else:
+                    if i % 2 == 0:
+                        playerLevel = 1
+                    else:
+                        playerLevel = 0
+            self.players.append(Player(nameList[i], i, playerLevel))
 
     def dealPreflop(self):
         """
