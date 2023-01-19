@@ -40,7 +40,7 @@ Następnie powinno otworzyć się okno gry, na którym użytkownik musi podać s
 ` `
 
 
-## Opis klas:
+## Class description:
 - Player – klasa w której przechowywane są dane o graczach, o ich kartach, wyniku z danej rundy, o ich stanie (czy pasowali czy dalej grają) oraz o stanie ich konta (ile pieniędzy mają dostępnych oraz ile pieniędzy wyłożyli na stół w danej rundzie).
 - Card – klasa odpowiedzialna za przechowywanie informacji o karcie, jej kolorze oraz wartości (dwójka, trójka, …, as)
 - GameCards – klasa pozwalająca na generowanie oraz mieszanie kart do gry
